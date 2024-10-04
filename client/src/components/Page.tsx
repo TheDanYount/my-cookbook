@@ -1,3 +1,5 @@
+import { RecipeForm } from './RecipeForm';
+
 type Props = {
   left: boolean;
 };
@@ -9,6 +11,8 @@ export function Page({ left }: Props) {
         ${left ? 'from-[#FFE8AA]' : 'from-[#A89971]'}
         ${left ? 'from-90%' : 'from-0%'}
         ${left ? 'to-[#A89971]' : 'to-[#FFE8AA]'}
-        ${left || 'to-10%'}`}></div>
+        ${left || 'to-10%'}`}>
+      {left && <RecipeForm />}
+    </div>
   );
 }
