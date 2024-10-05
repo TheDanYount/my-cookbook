@@ -31,8 +31,9 @@ app.post(
   uploadsMiddlewareRecipes.single('image'),
   async (req, res, next) => {
     try {
-      if (!req.file) throw new ClientError(400, 'no file field in request');
-      const imageUrl = `/images/recipe-images/${req.file.filename}`;
+      const imageUrl = req.file
+        ? `/images/recipe-images/${req.file.filename}`
+        : '';
       const { title, ingredients, directions, notes } = req.body;
       // Remove once form is updated
       const isFavorite = false;
@@ -44,19 +45,13 @@ app.post(
       const order = 1;
       // Remove once form is updated
       const cookbookId = 1;
-      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
+      if (!cookbookId)
+        throw new ClientError(400, 'cookbookId for recipe not recognized');
       if (!title) throw new ClientError(400, 'title is required');
-      if (!(typeof imageUrl === 'string'))
-        throw new ClientError(400, 'imageUrl is required');
-      if (!(typeof isFavorite === 'boolean'))
-        throw new ClientError(400, 'isFavorite is required');
-      if (!ingredients) throw new ClientError(400, 'ingredients is required');
-      if (!directions) throw new ClientError(400, 'directions is required');
-      if (!notes) throw new ClientError(400, 'notes is required');
-      if (!order) throw new ClientError(400, 'order is required');
-      if (!length) throw new ClientError(400, 'length is required');
-      if (!(typeof isPublic === 'boolean'))
-        throw new ClientError(400, 'isPublic is required');
+      if (!order)
+        throw new ClientError(400, 'internal error determining order');
+      if (!length)
+        throw new ClientError(400, 'internal error determining length');
       const sql = `
     insert into "recipes" ("cookbookId", "title", "imageUrl", "isFavorite", "ingredients", "directions", "notes", "order", "length", "isPublic")
     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
