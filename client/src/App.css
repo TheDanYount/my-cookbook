@@ -5,3 +5,14 @@
 * {
   box-sizing: border-box;
 }
+
+.page-fade::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-shadow: 0 0 10px 5px #ffe8aa inset;
+  z-index: 100;
+}
