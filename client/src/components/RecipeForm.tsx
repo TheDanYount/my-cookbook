@@ -70,12 +70,9 @@ export function RecipeForm() {
         placeholder="[Input notes here]"
         className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
         style={{ fontSize: '12px' }}></textarea>
-      <div className="h-[40px]">
-        <button className="block underline mx-auto hover:scale-110">
-          Submit
-        </button>
-        <p className="text-xs"></p>
-      </div>
+      <button className="block underline mx-auto hover:scale-110">
+        Submit
+      </button>
     </form>
   );
 }

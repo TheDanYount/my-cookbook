@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Page } from './Page';
 
 type Props = {
@@ -5,9 +6,17 @@ type Props = {
   title: string;
 };
 
+type PageData = {
+  type: string;
+  data: object;
+};
+
 export function Cookbook({ style, title }: Props) {
+  const [pages, setPages] = useState<PageData[]>([]);
   // The following is just here to calm my linter during development
   console.log(title, 'title');
+  console.log(pages, 'pages');
+  console.log(setPages, 'setPages');
   return (
     <div className="flex w-[588px] m-[60px]">
       <div
