@@ -26,6 +26,25 @@ app.use(express.static(reactStaticDir));
 app.use(express.static(uploadsStaticDir));
 app.use(express.json());
 
+app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
+  try {
+    const { cookbookId } = req.params;
+    if (!Number.isInteger(+cookbookId))
+      throw new ClientError(400, 'cookbookId must be an integer');
+    const sql = `
+    select *
+    from "recipes"
+    where "cookbookId" = $1;
+    `;
+    const result = await db.query(sql, [cookbookId]);
+    if (!result.rows[0])
+      throw new ClientError(404, `Zero recipes found for cookbook`);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post(
   '/api/create-recipe',
   uploadsMiddlewareRecipes.single('image'),
