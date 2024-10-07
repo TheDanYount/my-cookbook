@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IndividualPageProps } from './Page';
+import { PageData } from './Cookbook';
 
 export function RecipeForm({ pageData, pages }: IndividualPageProps) {
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
@@ -30,7 +31,7 @@ export function RecipeForm({ pageData, pages }: IndividualPageProps) {
     }
     const formPages = pages.slice(startOfForm, endOfForm + 1);
     const data = new FormData();
-    const image = extractImage(formPages);
+    const image = extractImage(formPages) as Blob;
     data.append('image', image);
     const title = formPages[0].data[0].text as string;
     data.append('title', title);
@@ -160,12 +161,12 @@ export function RecipeForm({ pageData, pages }: IndividualPageProps) {
   );
 }
 
-function extractImage(formPages) {
+function extractImage(formPages: PageData[]) {
   for (const formPage of formPages) {
     const imageStore = formPage.data.find(
       (element) => element.type === 'img-and-ingredients'
     );
-    if (imageStore.file) {
+    if (imageStore?.file) {
       return imageStore.file;
     } else {
       return undefined;
@@ -173,7 +174,7 @@ function extractImage(formPages) {
   }
 }
 
-function extractText(formPages, keyWord) {
+function extractText(formPages: PageData[], keyWord: string) {
   const textArray: string[] = [];
   for (const formPage of formPages) {
     const keyInput = formPage.data.find((element) => element.type === keyWord);
