@@ -1,3 +1,4 @@
+// Full credit to QoP on stackoverflow
 import { useState, useEffect } from 'react';
 
 function getWindowDimensions() {

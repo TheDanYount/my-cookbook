@@ -7,15 +7,16 @@ type Props = {
   title: string;
 };
 
-type PageData = {
+export type PageData = {
   type: string;
-  data: object;
+  data: { type: string; text?: string; file?: unknown; fileUrl?: string }[];
 };
 
 const dummyPagesForDevelopment = [
-  { type: 'title', data: {} },
-  { type: 'toc', data: {} },
-  { type: 'edit', data: {} },
+  { type: 'title', data: [] },
+  { type: 'title', data: [] },
+  { type: 'toc', data: [{ type: 'title' }, { type: 'addRecipeButton' }] },
+  { type: 'edit', data: [] },
 ];
 
 export function Cookbook({ style, title }: Props) {
@@ -36,12 +37,7 @@ export function Cookbook({ style, title }: Props) {
   console.log(setPages, 'setPages');
 
   function handlePageTurn(number) {
-    const newPageNum = leftPage + number;
-    if (
-      Math.abs(number) === 2 &&
-      newPageNum >= 1 &&
-      newPageNum <= pages.length
-    ) {
+    if (Math.abs(number) === 2) {
       setLeftPage(leftPage + number);
     } else if (number === -1 && smallScreenShift) {
       setSmallScreenShift(false);
@@ -58,12 +54,28 @@ export function Cookbook({ style, title }: Props) {
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
         style={{ backgroundColor: style }}>
-        <Page left={true} onPageTurn={handlePageTurn} pageNum={leftPage} />
+        <Page
+          left={true}
+          onPageTurn={handlePageTurn}
+          pageNum={leftPage}
+          pageData={pages[leftPage]}
+          pages={pages}
+          setPages={setPages}
+        />
       </div>
       <div
         className="w-[294px] h-[372px] rounded-r-[6px] pt-[13px]"
         style={{ backgroundColor: style }}>
-        <Page left={false} onPageTurn={handlePageTurn} pageNum={leftPage + 1} />
+        {pages[leftPage + 1] && (
+          <Page
+            left={false}
+            onPageTurn={handlePageTurn}
+            pageNum={leftPage + 1}
+            pageData={pages[leftPage + 1]}
+            pages={pages}
+            setPages={setPages}
+          />
+        )}
       </div>
     </div>
   );
