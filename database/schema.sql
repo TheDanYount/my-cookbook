@@ -11,6 +11,7 @@ CREATE TABLE "users" (
   "photoUrl" text,
   "username" text,
   "password" text,
+  "email" text,
   "firstName" text,
   "lastName" text,
   "style" text,
@@ -51,13 +52,15 @@ CREATE TABLE "viewers" (
 
 CREATE TABLE "recipes" (
   "recipeId" serial PRIMARY KEY,
-  "cookBookId" int,
+  "cookbookId" int,
   "title" text,
   "imageUrl" text,
   "isFavorite" boolean,
   "ingredients" text,
   "directions" text,
   "notes" text,
+  "order" int,
+  "length" int,
   "isPublic" boolean
 );
 
@@ -79,4 +82,4 @@ ALTER TABLE "viewers" ADD FOREIGN KEY ("cookbookId") REFERENCES "cookbooks" ("co
 
 ALTER TABLE "viewers" ADD FOREIGN KEY ("recipeId") REFERENCES "recipes" ("recipeId");
 
-ALTER TABLE "recipes" ADD FOREIGN KEY ("cookBookId") REFERENCES "cookbooks" ("cookbookId");
+ALTER TABLE "recipes" ADD FOREIGN KEY ("cookbookId") REFERENCES "cookbooks" ("cookbookId");
