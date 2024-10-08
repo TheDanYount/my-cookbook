@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
 
 export function RecipeForm({ pageData, pages }: IndividualPageProps) {
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
-  const [imgUrl, setImgUrl] = useState<string | undefined>(imgStore?.fileUrl);
+  const [imgUrl, setImgUrl] = useState<string>();
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
+
+  useEffect(() => {
+    setImgUrl(imgStore?.fileUrl);
+  }, [imgStore?.fileUrl]);
 
   async function imgPreview(file, data) {
     const reader = new FileReader();
@@ -35,7 +39,7 @@ export function RecipeForm({ pageData, pages }: IndividualPageProps) {
     data.append('image', image);
     const title = formPages[0].data[0].text as string;
     data.append('title', title);
-    const ingredients = extractText(formPages, 'ingredients'); // An array
+    const ingredients = extractText(formPages, 'img-and-ingredients'); // An array
     data.append('ingredients', JSON.stringify(ingredients));
     const directions = extractText(formPages, 'directions'); // An array
     data.append('directions', JSON.stringify(directions));
@@ -78,7 +82,7 @@ export function RecipeForm({ pageData, pages }: IndividualPageProps) {
                     imgUrl ? 'bg-[#ffffff00]' : 'bg-[#ffffff88]'
                   } text-xs text-center text-[#9CA3AF]`}>
                   {imgUrl ? (
-                    <div className="relative h-full">
+                    <div className="h-full">
                       <img
                         src={imgUrl}
                         className="object-cover h-full mx-auto"
@@ -176,11 +180,24 @@ function extractImage(formPages: PageData[]) {
 
 function extractText(formPages: PageData[], keyWord: string) {
   const textArray: string[] = [];
-  for (const formPage of formPages) {
-    const keyInput = formPage.data.find((element) => element.type === keyWord);
-    if (keyInput?.text) {
-      textArray.push(keyInput.text);
-    } else textArray.push('');
+  if (keyWord === 'img-and-ingredients') {
+    for (const formPage of formPages) {
+      const keyInput = formPage.data.find(
+        (element) => element.type === keyWord
+      );
+      if (keyInput?.text) {
+        textArray.push(keyInput.text);
+      } else textArray.push('');
+    }
+  } else {
+    for (const formPage of formPages) {
+      const keyInput = formPage.data.find(
+        (element) => element.type === keyWord
+      );
+      if (keyInput?.text) {
+        textArray.push(keyInput.text);
+      } else textArray.push('');
+    }
   }
   return textArray;
 }

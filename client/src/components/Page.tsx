@@ -1,5 +1,6 @@
 import { useWindowDimensions } from '../lib/window-dimensions';
 import { PageData } from './Cookbook';
+import { Recipe } from './Recipe';
 import { RecipeForm } from './RecipeForm';
 import { ToC } from './ToC';
 
@@ -36,6 +37,9 @@ export function Page({
         ${left || 'to-10%'}`}>
       {pageData.type === 'toc' && (
         <ToC pageData={pageData} pages={pages} setPages={setPages} />
+      )}
+      {pageData.type === 'recipe' && (
+        <Recipe pageData={pageData} pages={pages} setPages={setPages} />
       )}
       {pageData.type === 'recipeForm' && (
         <RecipeForm pageData={pageData} pages={pages} setPages={setPages} />

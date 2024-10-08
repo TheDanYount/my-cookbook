@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Page } from './Page';
 import { useWindowDimensions } from '../lib/window-dimensions';
+import { getRecipes } from '../lib/page-skeletons';
 
 type Props = {
   style: string;
@@ -20,10 +21,19 @@ const dummyPagesForDevelopment = [
 ];
 
 export function Cookbook({ style, title }: Props) {
+  const id = 1; //For development
   const [pages, setPages] = useState<PageData[]>([...dummyPagesForDevelopment]);
   const [leftPage, setLeftPage] = useState(1);
   const { width } = useWindowDimensions();
   const [smallScreenShift, setSmallScreenShift] = useState(false);
+
+  useEffect(() => {
+    async function setup() {
+      const recipes = await getRecipes(id);
+      if (recipes) setPages([...pages, ...recipes]);
+    }
+    setup();
+  }, []);
 
   useEffect(() => {
     if (width >= 660) {
@@ -33,8 +43,6 @@ export function Cookbook({ style, title }: Props) {
 
   // The following is just here to calm my linter during development
   console.log(title, 'title');
-  console.log(pages, 'pages');
-  console.log(setPages, 'setPages');
 
   function handlePageTurn(number) {
     if (Math.abs(number) === 2) {
