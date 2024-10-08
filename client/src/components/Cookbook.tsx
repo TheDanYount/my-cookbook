@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Page } from './Page';
 import { useWindowDimensions } from '../lib/window-dimensions';
-import { getRecipes } from '../lib/page-skeletons';
+import { buildToc, getRecipes } from '../lib/page-skeletons';
 
 type Props = {
   style: string;
@@ -10,14 +10,18 @@ type Props = {
 
 export type PageData = {
   type: string;
-  data: { type: string; text?: string; file?: unknown; fileUrl?: string }[];
+  data: {
+    type: string;
+    text?: string;
+    file?: unknown;
+    fileUrl?: string;
+    pageNum?: number;
+  }[];
 };
 
 const dummyPagesForDevelopment = [
   { type: 'title', data: [] },
   { type: 'title', data: [] },
-  { type: 'toc', data: [{ type: 'title' }, { type: 'addRecipeButton' }] },
-  { type: 'edit', data: [] },
 ];
 
 export function Cookbook({ style, title }: Props) {
@@ -30,7 +34,8 @@ export function Cookbook({ style, title }: Props) {
   useEffect(() => {
     async function setup() {
       const recipes = await getRecipes(id);
-      if (recipes) setPages([...pages, ...recipes]);
+      const toc = recipes ? buildToc([...pages, ...recipes]) : buildToc(pages);
+      if (recipes) setPages([...pages, toc, ...recipes]);
     }
     setup();
   }, []);

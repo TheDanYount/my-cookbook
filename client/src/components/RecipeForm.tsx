@@ -45,6 +45,8 @@ export function RecipeForm({ pageData, pages }: IndividualPageProps) {
     data.append('directions', JSON.stringify(directions));
     const notes = extractText(formPages, 'notes'); // An array
     data.append('notes', JSON.stringify(notes));
+    data.append('length', String(endOfForm + 1 - startOfForm));
+    data.append('order', String(startOfForm));
     try {
       const result = await fetch('/api/create-recipe', {
         method: 'POST',

@@ -53,43 +53,6 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
                 {e.text}
               </p>
             );
-          /*
-          case 'ingredients':
-            return (
-              <div
-                className="flex justify-end my-[-4px]"
-                key={`page:${currentPage},key:${keyCount}`}>
-                <textarea
-                  name="ingredients"
-                  placeholder="[Input ingredients here]"
-                  className={`block basis-[151px] px-[2px] resize-none my-1 bg-[#ffffff88]`}
-                  style={{ fontSize: '12px' }}
-                  onChange={(event) => (e.text = event.currentTarget.value)}
-                  value={e.text}></textarea>
-              </div>
-            );
-          case 'directions':
-            return (
-              <textarea
-                name="directions"
-                placeholder="[Input directions here]"
-                className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
-                style={{ fontSize: '12px' }}
-                onChange={(event) => (e.text = event.currentTarget.value)}
-                value={e.text}
-                key={`page:${currentPage},key:${keyCount}`}></textarea>
-            );
-          case 'notes':
-            return (
-              <textarea
-                name="notes"
-                placeholder="[Input notes here]"
-                className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
-                style={{ fontSize: '12px' }}
-                onChange={(event) => (e.text = event.currentTarget.value)}
-                value={e.text}
-                key={`page:${currentPage},key:${keyCount}`}></textarea>
-            );*/
         }
       })}
     </div>

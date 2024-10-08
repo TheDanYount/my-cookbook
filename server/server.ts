@@ -34,7 +34,8 @@ app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
     const sql = `
     select *
     from "recipes"
-    where "cookbookId" = $1;
+    where "cookbookId" = $1
+    order by "order";
     `;
     const result = await db.query(sql, [cookbookId]);
     if (!result.rows[0])
@@ -53,24 +54,26 @@ app.post(
       const imageUrl = req.file
         ? `/images/recipe-images/${req.file.filename}`
         : '';
-      const { title, ingredients, directions, notes } = req.body;
+      const { title, ingredients, directions, notes, length, order } = req.body;
       // Remove once form is updated
       const isFavorite = false;
       // Remove once form is updated
       const isPublic = false;
-      // Remove once form is updated
-      const length = 1;
-      // Remove once form is updated
-      const order = 1;
       // Remove once form is updated
       const cookbookId = 1;
       if (!cookbookId)
         throw new ClientError(400, 'cookbookId for recipe not recognized');
       if (!title) throw new ClientError(400, 'title is required');
       if (!order)
-        throw new ClientError(400, 'internal error determining order');
+        throw new ClientError(
+          400,
+          'client failed to automatically add order attribute'
+        );
       if (!length)
-        throw new ClientError(400, 'internal error determining length');
+        throw new ClientError(
+          400,
+          'client failed to automatically add length attribute'
+        );
       const sql = `
     insert into "recipes" ("cookbookId", "title", "imageUrl", "isFavorite", "ingredients", "directions", "notes", "order", "length", "isPublic")
     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)

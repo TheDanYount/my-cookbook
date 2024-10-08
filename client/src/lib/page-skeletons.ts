@@ -12,12 +12,7 @@ export async function getRecipes(cookbookId) {
       const notes = JSON.parse(recipe.notes);
       let usedImage = false;
       for (let i = 0; i < recipe.length; i++) {
-        const newData = [] as {
-          type: string;
-          text?: string | undefined;
-          file?: unknown;
-          fileUrl?: string | undefined;
-        }[];
+        const newData: PageData['data'] = [];
         if (i === 0) {
           newData.push({ type: 'title', text: recipe.title });
         }
@@ -28,8 +23,7 @@ export async function getRecipes(cookbookId) {
             text: ingredients[i],
             fileUrl: recipe.imageUrl,
           });
-        }
-        if (ingredients[i] && usedImage) {
+        } else if (ingredients[i] && usedImage) {
           newData.push({
             type: 'img-and-ingredients',
             text: ingredients[i],
@@ -59,10 +53,22 @@ export async function getRecipes(cookbookId) {
   }
 }
 
-export function getToC() {
+export function buildToc(pages: PageData[]) {
+  const recipes: PageData['data'] = [];
+  for (let i = 0; i < pages.length; i++) {
+    if (pages[i].type === 'recipe') {
+      if (pages[i].data[0].type === 'title') {
+        recipes.push({
+          type: 'recipe',
+          text: pages[i].data[0].text,
+          pageNum: i,
+        });
+      }
+    }
+  }
   return {
     type: 'toc',
-    data: [{ type: 'title' }, { type: 'addRecipeButton' }],
+    data: [{ type: 'title' }, ...recipes, { type: 'addRecipeButton' }],
   };
 }
 
