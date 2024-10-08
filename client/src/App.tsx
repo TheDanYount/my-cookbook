@@ -1,5 +1,16 @@
+import { Route, Routes } from 'react-router-dom';
 import { Cookbook } from './components/Cookbook';
+import { NotFound } from './components/NotFound';
 
 export default function App() {
-  return <Cookbook style={'#4C301E'} title={'My First Cookbook'} />;
+  return (
+    <Routes>
+      <Route path="/">
+        <Route
+          path="/cookbook/:cookbookId/page/:pageNum"
+          element={<Cookbook />}></Route>
+      </Route>
+      <Route path="*" element={<NotFound />}></Route>
+    </Routes>
+  );
 }
