@@ -15,6 +15,7 @@ export type PageData = {
     file?: unknown;
     fileUrl?: string;
     pageNum?: number;
+    length?: number;
   }[];
 };
 

@@ -13,7 +13,11 @@ export async function getRecipes(cookbookId) {
     for (let i = 0; i < recipe.length; i++) {
       const newData: PageData['data'] = [];
       if (i === 0) {
-        newData.push({ type: 'title', text: recipe.title });
+        newData.push({
+          type: 'title',
+          text: recipe.title,
+          length: recipe.length,
+        });
       }
       if (ingredients[i] && !usedImage) {
         usedImage = true;
@@ -64,7 +68,11 @@ export async function getRecipeByOrder(cookbookId, order) {
     for (let i = 0; i < recipe.length; i++) {
       const newData: PageData['data'] = [];
       if (i === 0) {
-        newData.push({ type: 'title', text: recipe.title });
+        newData.push({
+          type: 'title',
+          text: recipe.title,
+          length: recipe.length,
+        });
       }
       if (ingredients[i] && !usedImage) {
         usedImage = true;
@@ -109,6 +117,7 @@ export function buildToc(pages: PageData[]) {
           type: 'recipe',
           text: pages[i].data[0].text,
           pageNum: i + 3,
+          length: pages[i].data[0].length,
         });
       }
     }
