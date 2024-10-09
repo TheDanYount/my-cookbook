@@ -1,10 +1,22 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
+import { addToToc, getRecipeByOrder } from '../lib/page-skeletons';
 
-export function RecipeForm({ pageData, pages }: IndividualPageProps) {
+type RecipeFormProps = IndividualPageProps & {
+  cookbookId: number;
+};
+
+export function RecipeForm({
+  pageData,
+  pages,
+  setPages,
+  cookbookId,
+}: RecipeFormProps) {
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
   const [imgUrl, setImgUrl] = useState<string>();
+  const navigate = useNavigate();
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
 
@@ -55,6 +67,11 @@ export function RecipeForm({ pageData, pages }: IndividualPageProps) {
       const formattedResult = await result.json();
       if (!result.ok) throw new Error(formattedResult.error);
       alert('Recipe added successfully!');
+      const newRecipePages = await getRecipeByOrder(cookbookId, startOfForm);
+      pages.splice(startOfForm, endOfForm + 1 - startOfForm, ...newRecipePages);
+      setPages(pages);
+      addToToc(pages, title, startOfForm);
+      navigate(`/cookbook/${cookbookId}/page/2`);
     } catch (err) {
       alert(err);
     }

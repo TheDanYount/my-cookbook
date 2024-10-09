@@ -42,8 +42,8 @@ export function Cookbook() {
         const recipes = await getRecipes(cookbookId);
         if (recipes) {
           setPages(() => {
-            const toc = buildToc([...recipes]);
-            return [...[...dummyPagesForDevelopment], toc, ...recipes];
+            const toc = buildToc(recipes);
+            return [...dummyPagesForDevelopment, toc, ...recipes];
           });
           setIsLoading(false);
         }
@@ -98,6 +98,7 @@ export function Cookbook() {
             pageData={pages[leftPage]}
             pages={pages}
             setPages={setPages}
+            cookbookId={cookbookId}
           />
         )}
       </div>
@@ -112,6 +113,7 @@ export function Cookbook() {
             pageData={pages[leftPage + 1]}
             pages={pages}
             setPages={setPages}
+            cookbookId={cookbookId}
           />
         )}
       </div>

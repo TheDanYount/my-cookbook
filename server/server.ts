@@ -46,6 +46,29 @@ app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
   }
 });
 
+app.get(
+  '/api/read-recipe-by-order/:cookbookId/:order',
+  async (req, res, next) => {
+    try {
+      const { cookbookId, order } = req.params;
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(400, 'cookbookId must be an integer');
+      if (!Number.isInteger(+order))
+        throw new ClientError(400, `order must be an integer`);
+      const sql = `
+    select *
+    from "recipes"
+    where ("cookbookId" = $1 AND "order" = $2)
+    `;
+      const result = await db.query(sql, [cookbookId, order]);
+      if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
+      res.status(200).json(result.rows);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 app.post(
   '/api/create-recipe',
   uploadsMiddlewareRecipes.single('image'),
