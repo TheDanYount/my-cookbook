@@ -71,7 +71,7 @@ export function RecipeForm({
       pages.splice(startOfForm, endOfForm + 1 - startOfForm, ...newRecipePages);
       setPages(pages);
       addToToc(pages, title, startOfForm);
-      navigate(`/cookbook/${cookbookId}/page/2`);
+      navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
     } catch (err) {
       alert(err);
     }

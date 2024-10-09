@@ -43,6 +43,7 @@ export function Page({
           pages={pages}
           setPages={setPages}
           onPageTurn={onPageTurn}
+          pageNum={pageNum}
         />
       )}
       {pageData.type === 'recipe' && (

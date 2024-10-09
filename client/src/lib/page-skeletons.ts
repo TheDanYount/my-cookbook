@@ -108,7 +108,7 @@ export function buildToc(pages: PageData[]) {
         recipes.push({
           type: 'recipe',
           text: pages[i].data[0].text,
-          pageNum: i + 2,
+          pageNum: i + 3,
         });
       }
     }

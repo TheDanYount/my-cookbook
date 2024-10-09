@@ -3,6 +3,7 @@ import { IndividualPageProps } from './Page';
 
 type tocIndividualPageProps = IndividualPageProps & {
   onPageTurn: (num) => void;
+  pageNum: number;
 };
 
 export function ToC({
@@ -10,12 +11,13 @@ export function ToC({
   pages,
   setPages,
   onPageTurn,
+  pageNum,
 }: tocIndividualPageProps) {
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
   function handleNewRecipe() {
     setPages([...pages, getRecipeForm()]);
-    onPageTurn(pages.length - 1);
+    onPageTurn(pages.length - pageNum);
   }
   return (
     <div className="text-xs px-[30px]">
@@ -36,7 +38,7 @@ export function ToC({
                 className="flex justify-between items-start"
                 key={`page:${currentPage},key:${keyCount}`}>
                 <p>{e.text}</p>
-                <p>{Number(e.pageNum) + 1}</p>
+                <p>{Number(e.pageNum)}</p>
               </div>
             );
           case 'addRecipeButton':
