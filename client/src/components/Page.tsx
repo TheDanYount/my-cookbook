@@ -36,7 +36,12 @@ export function Page({
         ${left ? 'to-[#A89971]' : 'to-[#FFE8AA]'}
         ${left || 'to-10%'}`}>
       {pageData.type === 'toc' && (
-        <ToC pageData={pageData} pages={pages} setPages={setPages} />
+        <ToC
+          pageData={pageData}
+          pages={pages}
+          setPages={setPages}
+          onPageTurn={onPageTurn}
+        />
       )}
       {pageData.type === 'recipe' && (
         <Recipe pageData={pageData} pages={pages} setPages={setPages} />

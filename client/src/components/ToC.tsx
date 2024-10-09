@@ -1,11 +1,21 @@
 import { getRecipeForm } from '../lib/page-skeletons';
 import { IndividualPageProps } from './Page';
 
-export function ToC({ pageData, pages, setPages }: IndividualPageProps) {
+type tocIndividualPageProps = IndividualPageProps & {
+  onPageTurn: (num) => void;
+};
+
+export function ToC({
+  pageData,
+  pages,
+  setPages,
+  onPageTurn,
+}: tocIndividualPageProps) {
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
   function handleNewRecipe() {
     setPages([...pages, getRecipeForm()]);
+    onPageTurn(pages.length - 1);
   }
   return (
     <div className="text-xs px-[30px]">

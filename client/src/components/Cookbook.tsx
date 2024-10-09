@@ -27,66 +27,70 @@ export function Cookbook() {
   const { cookbookId, pageNum } = useParams();
   const navigate = useNavigate();
   if (!cookbookId || !pageNum) navigate('/NotFound');
-  const [isLoading, setIsLoading] = useState(true);
-  const [pages, setPages] = useState<PageData[]>([...dummyPagesForDevelopment]);
+  const [isLoading, setIsLoading] = useState<boolean>();
+  const [pages, setPages] = useState<PageData[]>([]);
   const [leftPage, setLeftPage] = useState(
     pageNum ? +pageNum - ((+pageNum + 1) % 2) : 1
   );
   const { width } = useWindowDimensions();
-  const [smallScreenShift, setSmallScreenShift] = useState(false);
-
-  async function setup() {
-    const recipes = await getRecipes(cookbookId);
-    const toc = recipes ? buildToc([...pages, ...recipes]) : buildToc(pages);
-    if (recipes) {
-      setPages([...pages, toc, ...recipes]);
-      setIsLoading(false);
-    }
-  }
-  if (isLoading) {
-    setup();
-  }
+  const [smallScreenShift, setSmallScreenShift] = useState(width < 660);
 
   useEffect(() => {
-    if (width < 660 && pageNum && leftPage < +pageNum) {
+    async function setup() {
+      setIsLoading(true);
+      try {
+        const recipes = await getRecipes(cookbookId);
+        if (recipes) {
+          setPages(() => {
+            const toc = buildToc([...recipes]);
+            return [...[...dummyPagesForDevelopment], toc, ...recipes];
+          });
+          setIsLoading(false);
+        }
+      } catch (err) {
+        alert(err);
+      }
+    }
+    if (isLoading === undefined) setup();
+  }, [cookbookId, isLoading]);
+
+  useEffect(() => {
+    if (width < 660 && smallScreenShift === false) {
       setSmallScreenShift(true);
-    } else {
+    } else if (width >= 660 && smallScreenShift === true) {
       setSmallScreenShift(false);
     }
-  }, [width, leftPage, pageNum]);
+  }, [width, smallScreenShift]);
 
-  useEffect(() => {
-    if (!pageNum || +pageNum < 1 || +pageNum > pages.length) {
-      navigate('/NotFound');
-      return;
-    }
-  }, [pageNum, pages, navigate]);
+  if (
+    isLoading === false &&
+    (!pageNum || +pageNum < 1 || +pageNum > pages.length - 1)
+  ) {
+    navigate('/NotFound');
+    return;
+  }
 
-  if (isLoading) {
+  if (!(isLoading === false)) {
     return 'Loading';
   }
 
   function handlePageTurn(number) {
     if (!pageNum) return;
-    if (Math.abs(number) === 2) {
-      navigate(`/cookbook/${cookbookId}/page/${+pageNum + number}`);
-      setLeftPage(leftPage + number);
-    } else if (number === -1 && smallScreenShift) {
-      navigate(`/cookbook/${cookbookId}/page/${+pageNum + number}`);
-    } else if (number === 1 && !smallScreenShift) {
-      navigate(`/cookbook/${cookbookId}/page/${+pageNum + number}`);
-    }
+    navigate(`/cookbook/${cookbookId}/page/${+pageNum + number}`);
+    setLeftPage(+pageNum + number - ((+pageNum + number + 1) % 2));
   }
 
   return (
     <div
       className={`${
-        smallScreenShift ? 'ml-[-234px]' : ''
+        smallScreenShift && pageNum && +pageNum - leftPage === 1
+          ? 'ml-[-234px]'
+          : ''
       } flex w-[588px] m-[60px]`}>
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
         style={{ backgroundColor: style }}>
-        {pages.length >= Number(pageNum) && (
+        {isLoading === false && pages[leftPage]?.type && (
           <Page
             left={true}
             onPageTurn={handlePageTurn}
@@ -100,7 +104,7 @@ export function Cookbook() {
       <div
         className="w-[294px] h-[372px] rounded-r-[6px] pt-[13px]"
         style={{ backgroundColor: style }}>
-        {pages.length >= Number(pageNum) + 2 && (
+        {isLoading === false && pages[leftPage + 1]?.type && (
           <Page
             left={false}
             onPageTurn={handlePageTurn}
