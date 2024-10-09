@@ -38,8 +38,6 @@ app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
     order by "order";
     `;
     const result = await db.query(sql, [cookbookId]);
-    if (!result.rows[0])
-      throw new ClientError(404, `Zero recipes found for cookbook`);
     res.status(200).json(result.rows);
   } catch (err) {
     next(err);

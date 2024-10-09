@@ -1,3 +1,4 @@
+import React from 'react';
 import { IndividualPageProps } from './Page';
 
 export function Recipe({ pageData, pages }: IndividualPageProps) {
@@ -8,13 +9,22 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
     <div className="text-xs px-[10px]">
       {pageData.data.map((e) => {
         keyCount++;
+        let formattedText;
+        if (e.text) {
+          formattedText = e.text.split('\n').map((line, index) => (
+            <React.Fragment key={index}>
+              {line}
+              {e.text && index < e.text.split('\n').length - 1 && <br />}
+            </React.Fragment>
+          ));
+        }
         switch (e.type) {
           case 'title':
             return (
               <h1
                 className="text-center text-base w-full"
                 key={`page:${currentPage},key:${keyCount}`}>
-                {e.text}
+                {formattedText}
               </h1>
             );
           case 'img-and-ingredients':
@@ -31,7 +41,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
                 <p
                   className={`block basis-[151px] px-[2px] my-1`}
                   style={{ fontSize: '12px' }}>
-                  {e.text}
+                  {formattedText}
                 </p>
               </div>
             );
@@ -41,7 +51,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
                 className={`px-[2px] my-1`}
                 style={{ fontSize: '12px' }}
                 key={`page:${currentPage},key:${keyCount}`}>
-                {e.text}
+                {formattedText}
               </p>
             );
           case 'notes':
@@ -50,7 +60,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
                 className={`px-[2px] my-1`}
                 style={{ fontSize: '12px' }}
                 key={`page:${currentPage},key:${keyCount}`}>
-                {e.text}
+                {formattedText}
               </p>
             );
         }
