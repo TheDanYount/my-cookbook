@@ -1,72 +1,111 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Page } from './Page';
 import { useWindowDimensions } from '../lib/window-dimensions';
+import { buildToc, getRecipes } from '../lib/page-skeletons';
 
-type Props = {
-  style: string;
-  title: string;
-};
+// For development
+const style = '#4C301E';
 
 export type PageData = {
   type: string;
-  data: { type: string; text?: string; file?: unknown; fileUrl?: string }[];
+  data: {
+    type: string;
+    text?: string;
+    file?: unknown;
+    fileUrl?: string;
+    pageNum?: number;
+  }[];
 };
 
 const dummyPagesForDevelopment = [
   { type: 'title', data: [] },
   { type: 'title', data: [] },
-  { type: 'toc', data: [{ type: 'title' }, { type: 'addRecipeButton' }] },
-  { type: 'edit', data: [] },
 ];
 
-export function Cookbook({ style, title }: Props) {
-  const [pages, setPages] = useState<PageData[]>([...dummyPagesForDevelopment]);
-  const [leftPage, setLeftPage] = useState(1);
+export function Cookbook() {
+  const { cookbookId, pageNum } = useParams();
+  const navigate = useNavigate();
+  if (!cookbookId || !pageNum) navigate('/NotFound');
+  const [isLoading, setIsLoading] = useState<boolean>();
+  const [pages, setPages] = useState<PageData[]>([]);
+  const [leftPage, setLeftPage] = useState(
+    pageNum ? +pageNum - ((+pageNum + 1) % 2) : 1
+  );
   const { width } = useWindowDimensions();
-  const [smallScreenShift, setSmallScreenShift] = useState(false);
+  const [smallScreenShift, setSmallScreenShift] = useState(width < 660);
 
   useEffect(() => {
-    if (width >= 660) {
+    async function setup() {
+      setIsLoading(true);
+      try {
+        const recipes = await getRecipes(cookbookId);
+        if (recipes) {
+          setPages(() => {
+            const toc = buildToc(recipes);
+            return [...dummyPagesForDevelopment, toc, ...recipes];
+          });
+          setIsLoading(false);
+        }
+      } catch (err) {
+        alert(err);
+      }
+    }
+    if (isLoading === undefined) setup();
+  }, [cookbookId, isLoading]);
+
+  useEffect(() => {
+    if (width < 660 && smallScreenShift === false) {
+      setSmallScreenShift(true);
+    } else if (width >= 660 && smallScreenShift === true) {
       setSmallScreenShift(false);
     }
-  }, [width]);
+  }, [width, smallScreenShift]);
 
-  // The following is just here to calm my linter during development
-  console.log(title, 'title');
-  console.log(pages, 'pages');
-  console.log(setPages, 'setPages');
+  if (
+    isLoading === false &&
+    (!pageNum || +pageNum < 1 || +pageNum > pages.length - 1)
+  ) {
+    navigate('/NotFound');
+    return;
+  }
+
+  if (!(isLoading === false)) {
+    return 'Loading';
+  }
 
   function handlePageTurn(number) {
-    if (Math.abs(number) === 2) {
-      setLeftPage(leftPage + number);
-    } else if (number === -1 && smallScreenShift) {
-      setSmallScreenShift(false);
-    } else if (number === 1 && !smallScreenShift) {
-      setSmallScreenShift(true);
-    }
+    if (!pageNum) return;
+    navigate(`/cookbook/${cookbookId}/page/${+pageNum + number}`);
+    setLeftPage(+pageNum + number - ((+pageNum + number + 1) % 2));
   }
 
   return (
     <div
       className={`${
-        smallScreenShift ? 'ml-[-234px]' : ''
+        smallScreenShift && pageNum && +pageNum - leftPage === 1
+          ? 'ml-[-234px]'
+          : ''
       } flex w-[588px] m-[60px]`}>
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
         style={{ backgroundColor: style }}>
-        <Page
-          left={true}
-          onPageTurn={handlePageTurn}
-          pageNum={leftPage}
-          pageData={pages[leftPage]}
-          pages={pages}
-          setPages={setPages}
-        />
+        {isLoading === false && pages[leftPage]?.type && (
+          <Page
+            left={true}
+            onPageTurn={handlePageTurn}
+            pageNum={leftPage}
+            pageData={pages[leftPage]}
+            pages={pages}
+            setPages={setPages}
+            cookbookId={cookbookId}
+          />
+        )}
       </div>
       <div
         className="w-[294px] h-[372px] rounded-r-[6px] pt-[13px]"
         style={{ backgroundColor: style }}>
-        {pages[leftPage + 1] && (
+        {isLoading === false && pages[leftPage + 1]?.type && (
           <Page
             left={false}
             onPageTurn={handlePageTurn}
@@ -74,6 +113,7 @@ export function Cookbook({ style, title }: Props) {
             pageData={pages[leftPage + 1]}
             pages={pages}
             setPages={setPages}
+            cookbookId={cookbookId}
           />
         )}
       </div>

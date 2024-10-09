@@ -1,5 +1,6 @@
 import { useWindowDimensions } from '../lib/window-dimensions';
 import { PageData } from './Cookbook';
+import { Recipe } from './Recipe';
 import { RecipeForm } from './RecipeForm';
 import { ToC } from './ToC';
 
@@ -10,6 +11,7 @@ type Props = {
   pageData: PageData;
   pages: PageData[];
   setPages: (pages: PageData[]) => void;
+  cookbookId;
 };
 
 export type IndividualPageProps = {
@@ -25,6 +27,7 @@ export function Page({
   pageData,
   pages,
   setPages,
+  cookbookId,
 }: Props) {
   const { width } = useWindowDimensions();
   return (
@@ -35,10 +38,23 @@ export function Page({
         ${left ? 'to-[#A89971]' : 'to-[#FFE8AA]'}
         ${left || 'to-10%'}`}>
       {pageData.type === 'toc' && (
-        <ToC pageData={pageData} pages={pages} setPages={setPages} />
+        <ToC
+          pageData={pageData}
+          pages={pages}
+          setPages={setPages}
+          onPageTurn={onPageTurn}
+        />
+      )}
+      {pageData.type === 'recipe' && (
+        <Recipe pageData={pageData} pages={pages} setPages={setPages} />
       )}
       {pageData.type === 'recipeForm' && (
-        <RecipeForm pageData={pageData} pages={pages} setPages={setPages} />
+        <RecipeForm
+          pageData={pageData}
+          pages={pages}
+          setPages={setPages}
+          cookbookId={cookbookId}
+        />
       )}
       <div className="flex text-xs self-center">
         {left && pageNum > 1 && (
