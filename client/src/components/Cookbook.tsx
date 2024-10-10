@@ -36,6 +36,7 @@ export function Cookbook() {
   );
   const { width } = useWindowDimensions();
   const [smallScreenShift, setSmallScreenShift] = useState(width < 660);
+  console.log('cookbook is re-rendering', pageNum);
 
   useEffect(() => {
     async function setup() {

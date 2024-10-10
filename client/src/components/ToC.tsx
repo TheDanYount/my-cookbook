@@ -45,8 +45,8 @@ export function ToC({
   };
 
   function handlePointerDown(e) {
-    const currentTarget = e.currentTarget;
-    if (currentTarget) setEntryToMove(currentTarget);
+    const target = e.currentTarget.closest('.relative');
+    if (target) setEntryToMove(target);
     setIsPointerDown(true);
   }
 
@@ -100,6 +100,7 @@ export function ToC({
                 placementOnPage={keyCount}
                 onPointerMove={handlePointerMove}
                 onPointerDown={handlePointerDown}
+                onPageTurn={onPageTurn}
                 key={`page:${currentPage},key:${keyCount}`}
               />
             );
