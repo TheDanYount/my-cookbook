@@ -122,41 +122,66 @@ app.post(
 app.put('/api/update-recipe/:cookbookId/:recipeId', async (req, res, next) => {
   try {
     const { cookbookId, recipeId } = req.params;
-    if (!title) throw new ClientError(400, 'title is required');
-    if (!order) throw new ClientError(400, 'order is required');
+    if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
+    if (!recipeId) throw new ClientError(400, 'recipeId is required');
+    const imageUrl = req.file
+      ? `/images/recipe-images/${req.file.filename}`
+      : '';
+    const { title, ingredients, directions, notes, length, order } = req.body;
+    // Remove once form is updated
+    const isFavorite = false;
+    // Remove once form is updated
+    const isPublic = false;
     const sql = `
     update "recipes"
-    set "order" = $2
-    where title = $1
+    set "title" = $3, "imageUrl" = $4, "isFavorite" = $5, "ingredients" = $6,
+    "directions" = $7, "notes" = $8, "order" = $9, "length" = $10, "isPublic" = $11
+    where ("cookbookId" = $1 AND "recipeId" = $2)
     returning *;
     `;
-    const result = await db.query(sql, [title, order]);
-    if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
+    const result = await db.query(sql, [
+      cookbookId,
+      recipeId,
+      title,
+      imageUrl,
+      isFavorite,
+      ingredients,
+      directions,
+      notes,
+      order,
+      length,
+      isPublic,
+    ]);
+    if (!result.rows[0]) throw new ClientError(404, `Recipe not found`);
     res.status(200).json(result.rows[0]);
   } catch (err) {
     next(err);
   }
 });
 
-app.put('/api/re-order-recipes/:cookbookId', async (req, res, next) => {
-  try {
-    const { cookbookId } = req.params;
-    const { recipeId, order } = req.body;
-    if (!recipeId) throw new ClientError(400, 'recipeId is required');
-    if (!order) throw new ClientError(400, 'order is required');
-    const sql = `
+app.put(
+  '/api/re-order-recipes/:cookbookId/:recipeId',
+  async (req, res, next) => {
+    try {
+      const { cookbookId, recipeId } = req.params;
+      const { order } = req.body;
+      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
+      if (!recipeId) throw new ClientError(400, 'recipeId is required');
+      if (!order) throw new ClientError(400, 'order is required');
+      const sql = `
     update "recipes"
     set "order" = $3
-    where ("recipeId" = $2 AND "cookbookId" = $1)
+    where ("cookbookId" = $1 AND "recipeId" = $2)
     returning *;
     `;
-    const result = await db.query(sql, [cookbookId, recipeId, order]);
-    if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
-    res.status(200).json(result.rows[0]);
-  } catch (err) {
-    next(err);
+      const result = await db.query(sql, [cookbookId, recipeId, order]);
+      if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
+      res.status(200).json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
 /*
  * Handles paths that aren't handled by any other route handler.

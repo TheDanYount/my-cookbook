@@ -135,13 +135,16 @@ function reOrderTocEntries(data) {
 async function reOrderRecipes(data, cookbookId) {
   for (let i = 0; i < data.length; i++) {
     try {
-      const result = await fetch(`/api/re-order-recipes/${cookbookId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ recipeId: data[i].id, order: i + 1 }),
-      });
+      const result = await fetch(
+        `/api/re-order-recipes/${cookbookId}/${data[i].id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ order: i + 1 }),
+        }
+      );
       const formattedResult = await result.json();
       if (!result.ok) throw new Error(formattedResult.error);
     } catch (err) {
