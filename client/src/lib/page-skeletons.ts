@@ -9,6 +9,7 @@ export async function getRecipes(cookbookId) {
     const ingredients = JSON.parse(recipe.ingredients);
     const directions = JSON.parse(recipe.directions);
     const notes = JSON.parse(recipe.notes);
+    const recipeId = recipe.recipeId;
     let usedImage = false;
     for (let i = 0; i < recipe.length; i++) {
       const newData: PageData['data'] = [];
@@ -17,6 +18,7 @@ export async function getRecipes(cookbookId) {
           type: 'title',
           text: recipe.title,
           length: recipe.length,
+          id: recipeId,
         });
       }
       if (ingredients[i] && !usedImage) {
@@ -118,6 +120,7 @@ export function buildToc(pages: PageData[]) {
           text: pages[i].data[0].text,
           pageNum: i + 3,
           length: pages[i].data[0].length,
+          id: pages[i].data[0].id,
         });
       }
     }

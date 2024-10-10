@@ -16,6 +16,7 @@ export type PageData = {
     fileUrl?: string;
     pageNum?: number;
     length?: number;
+    id?: number;
   }[];
 };
 

@@ -140,7 +140,7 @@ async function reOrderRecipes(data, cookbookId) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ title: data[i].text, order: i + 1 }),
+        body: JSON.stringify({ recipeId: data[i].id, order: i + 1 }),
       });
       const formattedResult = await result.json();
       if (!result.ok) throw new Error(formattedResult.error);
