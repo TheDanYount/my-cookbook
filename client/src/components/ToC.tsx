@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getRecipeForm } from '../lib/page-skeletons';
+import { getRecipeForm } from '../lib/page-scaffolding';
 import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
 
@@ -28,15 +28,18 @@ export function ToC({
         const movingFromPos = Number(entryToMove?.dataset.placementonpage);
         const movingToPos = Number(currentTarget?.dataset.placementonpage);
         if (movingFromPos && movingToPos) {
-          let pDDataCopy = pageData.data.slice();
+          const pDDataCopy = pageData.data.slice();
           pDDataCopy.splice(movingToPos, 1, pageData.data[movingFromPos]);
           pDDataCopy.splice(movingFromPos, 1, pageData.data[movingToPos]);
           setEntryToMove(currentTarget);
-          pDDataCopy = reOrderTocEntries(pDDataCopy);
+          reOrderTocEntries(pDDataCopy);
+          const pagesCopy = pages.slice();
+          pagesCopy.splice(movingToPos + 2, 1, pages[movingFromPos + 2]);
+          pagesCopy.splice(movingFromPos + 2, 1, pages[movingToPos + 2]);
           const newPages = [
             ...pages.slice(0, 2),
             { type: 'toc', data: pDDataCopy },
-            ...pages.slice(3),
+            ...pagesCopy.slice(3),
           ];
           setPages(newPages);
         }

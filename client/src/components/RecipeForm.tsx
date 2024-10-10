@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
-import { addToToc, getRecipeByOrder } from '../lib/page-skeletons';
+import { addToToc, getRecipeByOrder } from '../lib/page-scaffolding';
 
 type RecipeFormProps = IndividualPageProps & {
   cookbookId: number;

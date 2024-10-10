@@ -7,7 +7,7 @@ import { ToC } from './ToC';
 type Props = {
   left: boolean;
   onPageTurn: (number) => void;
-  pageNum: number;
+  thisPageNum: number;
   pageData: PageData;
   pages: PageData[];
   setPages: (pages: PageData[]) => void;
@@ -23,7 +23,7 @@ export type IndividualPageProps = {
 export function Page({
   left,
   onPageTurn,
-  pageNum,
+  thisPageNum,
   pageData,
   pages,
   setPages,
@@ -57,17 +57,17 @@ export function Page({
         />
       )}
       <div className="flex text-xs self-center">
-        {left && pageNum > 1 && (
+        {left && thisPageNum > 1 && (
           <button onClick={() => onPageTurn(-2)}>Back</button>
         )}
         {!left && width < 660 && (
           <button onClick={() => onPageTurn(-1)}>Back</button>
         )}
-        <p className="mx-2">{`- ${pageNum} -`}</p>
-        {!left && pageNum < pages.length - 1 && (
+        <p className="mx-2">{`- ${thisPageNum} -`}</p>
+        {!left && thisPageNum < pages.length - 1 && (
           <button onClick={() => onPageTurn(2)}>Next</button>
         )}
-        {left && width < 660 && pages.length > pageNum + 1 && (
+        {left && width < 660 && pages.length > thisPageNum + 1 && (
           <button onClick={() => onPageTurn(1)}>Next</button>
         )}
       </div>
