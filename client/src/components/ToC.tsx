@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { getRecipeForm } from '../lib/page-skeletons';
 import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
 
 type tocIndividualPageProps = IndividualPageProps & {
   onPageTurn: (num) => void;
-  pageNum: number;
 };
 
 export function ToC({
@@ -13,14 +13,15 @@ export function ToC({
   pages,
   setPages,
   onPageTurn,
-  pageNum,
 }: tocIndividualPageProps) {
   let keyCount = -1;
+  const { pageNum, cookbookId } = useParams();
   const currentPage = pages.findIndex((e) => e === pageData);
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [entryToMove, setEntryToMove] = useState<HTMLElement>();
 
   const handlePointerMove = (event) => {
+    if (!pageNum) return;
     if (isPointerDown) {
       const currentTarget = event.currentTarget;
       if (entryToMove && !(currentTarget === entryToMove)) {
@@ -31,35 +32,44 @@ export function ToC({
           pDDataCopy.splice(movingToPos, 1, pageData.data[movingFromPos]);
           pDDataCopy.splice(movingFromPos, 1, pageData.data[movingToPos]);
           setEntryToMove(currentTarget);
-          setPages([
+          const newPages = [
             ...pages.slice(0, 2),
             { type: 'toc', data: pDDataCopy },
             ...pages.slice(3),
-          ]);
+          ];
+          setPages(newPages);
         }
       }
     }
   };
 
-  const handlePointerDown = (e) => {
+  function handlePointerDown(e) {
     const currentTarget = e.currentTarget;
     if (currentTarget) setEntryToMove(currentTarget);
     setIsPointerDown(true);
-  };
+  }
 
-  const handlePointerUp = () => {
+  function finishPointerHandling() {
     setEntryToMove(undefined);
     setIsPointerDown(false);
-  };
+    reOrderRecipes(
+      pages[2].data.filter((e) => e.type === 'recipe'),
+      cookbookId
+    );
+  }
 
-  const handlePointerLeave = () => {
-    setEntryToMove(undefined);
-    setIsPointerDown(false);
-  };
+  function handlePointerUp() {
+    finishPointerHandling();
+  }
+
+  function handlePointerLeave() {
+    finishPointerHandling();
+  }
 
   function handleNewRecipe() {
     setPages([...pages, getRecipeForm()]);
-    onPageTurn(pages.length - pageNum);
+    if (!pageNum) return;
+    onPageTurn(pages.length - +pageNum);
   }
   return (
     <div
@@ -108,4 +118,22 @@ export function ToC({
       })}
     </div>
   );
+}
+
+async function reOrderRecipes(data, cookbookId) {
+  for (let i = 0; i < data.length; i++) {
+    try {
+      const result = await fetch(`/api/re-order-recipes/${cookbookId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: data[i].text, order: i + 1 }),
+      });
+      const formattedResult = await result.json();
+      if (!result.ok) throw new Error(formattedResult.error);
+    } catch (err) {
+      alert(err);
+    }
+  }
 }

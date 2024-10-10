@@ -119,6 +119,25 @@ app.post(
   }
 );
 
+app.put('/api/re-order-recipes/:cookbookId', async (req, res, next) => {
+  try {
+    const { title, order } = req.body;
+    if (!title) throw new ClientError(400, 'title is required');
+    if (!order) throw new ClientError(400, 'order is required');
+    const sql = `
+    update "recipes"
+    set "order" = $2
+    where title = $1
+    returning *;
+    `;
+    const result = await db.query(sql, [title, order]);
+    if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /*
  * Handles paths that aren't handled by any other route handler.
  * It responds with `index.html` to support page refreshes with React Router.
