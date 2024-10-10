@@ -17,25 +17,44 @@ export function ToC({
 }: tocIndividualPageProps) {
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
-  const [isMouseDown, setIsMouseDown] = useState(false);
-  const [yCoordinate, setYCoordinate] = useState<number>();
+  const [isPointerDown, setIsPointerDown] = useState(false);
+  const [entryToMove, setEntryToMove] = useState<HTMLElement>();
 
   const handlePointerMove = (event) => {
-    if (isMouseDown) {
-      // Distance down from the top of the Page component
-      const y = event.clientY - 73;
-      setYCoordinate(y);
-      console.log(`Y Coordinate: ${y}`);
+    if (isPointerDown) {
+      const currentTarget = event.currentTarget;
+      if (entryToMove && !(currentTarget === entryToMove)) {
+        const movingFromPos = Number(entryToMove?.dataset.placementonpage);
+        const movingToPos = Number(currentTarget?.dataset.placementonpage);
+        if (movingFromPos && movingToPos) {
+          const pDDataCopy = pageData.data.slice();
+          pDDataCopy.splice(movingToPos, 1, pageData.data[movingFromPos]);
+          pDDataCopy.splice(movingFromPos, 1, pageData.data[movingToPos]);
+          setEntryToMove(currentTarget);
+          setPages([
+            ...pages.slice(0, 2),
+            { type: 'toc', data: pDDataCopy },
+            ...pages.slice(3),
+          ]);
+        }
+      }
     }
   };
 
-  const handlePointerDown = (event) => {
-    console.log(event.target.closest('.relative').dataset.length);
-    setIsMouseDown(true);
+  const handlePointerDown = (e) => {
+    const currentTarget = e.currentTarget;
+    if (currentTarget) setEntryToMove(currentTarget);
+    setIsPointerDown(true);
   };
 
   const handlePointerUp = () => {
-    setIsMouseDown(false);
+    setEntryToMove(undefined);
+    setIsPointerDown(false);
+  };
+
+  const handlePointerLeave = () => {
+    setEntryToMove(undefined);
+    setIsPointerDown(false);
   };
 
   function handleNewRecipe() {
@@ -45,9 +64,8 @@ export function ToC({
   return (
     <div
       className="text-xs px-[30px]"
-      onPointerMove={handlePointerMove}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}>
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerLeave}>
       {pageData.data.map((e) => {
         keyCount++;
         switch (e.type) {
@@ -68,6 +86,9 @@ export function ToC({
                 text={e.text}
                 pageNum={e.pageNum}
                 length={e.length}
+                placementOnPage={keyCount}
+                onPointerMove={handlePointerMove}
+                onPointerDown={handlePointerDown}
                 key={`page:${currentPage},key:${keyCount}`}
               />
             );

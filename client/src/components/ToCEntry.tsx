@@ -4,19 +4,35 @@ type TocEntryProps = {
   text: string;
   pageNum: number;
   length: number;
+  placementOnPage: number;
+  onPointerMove: (event) => void;
+  onPointerDown: (event) => void;
 };
 
-export function ToCEntry({ text, pageNum, length }: TocEntryProps) {
+export function ToCEntry({
+  text,
+  pageNum,
+  length,
+  placementOnPage,
+  onPointerMove,
+  onPointerDown,
+}: TocEntryProps) {
   return (
-    <div className="relative h-[16px]" data-length={length}>
+    <div
+      className="relative h-[16px] hover:cursor-pointer"
+      data-title={text}
+      data-length={length}
+      data-placementonpage={placementOnPage}
+      onPointerMove={onPointerMove}
+      onPointerDown={onPointerDown}>
       <div className="absolute flex justify-between items-start w-full">
-        <div className="flex hover:scale-110 hover:cursor-pointer">
+        <div className="flex hover:scale-110">
           <div className="text-base">
             <RxCaretSort />
           </div>
           <p className="select-none">{text}</p>
         </div>
-        <p>{Number(pageNum)}</p>
+        <p className="select-none">{Number(pageNum)}</p>
       </div>
     </div>
   );
