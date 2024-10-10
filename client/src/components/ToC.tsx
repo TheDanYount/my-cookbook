@@ -28,10 +28,11 @@ export function ToC({
         const movingFromPos = Number(entryToMove?.dataset.placementonpage);
         const movingToPos = Number(currentTarget?.dataset.placementonpage);
         if (movingFromPos && movingToPos) {
-          const pDDataCopy = pageData.data.slice();
+          let pDDataCopy = pageData.data.slice();
           pDDataCopy.splice(movingToPos, 1, pageData.data[movingFromPos]);
           pDDataCopy.splice(movingFromPos, 1, pageData.data[movingToPos]);
           setEntryToMove(currentTarget);
+          pDDataCopy = reOrderTocEntries(pDDataCopy);
           const newPages = [
             ...pages.slice(0, 2),
             { type: 'toc', data: pDDataCopy },
@@ -118,6 +119,17 @@ export function ToC({
       })}
     </div>
   );
+}
+
+function reOrderTocEntries(data) {
+  let runningTotal = 3;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].type === 'recipe') {
+      data[i].pageNum = runningTotal;
+      runningTotal += data[i].length;
+    }
+  }
+  return data;
 }
 
 async function reOrderRecipes(data, cookbookId) {
