@@ -104,6 +104,8 @@ export function ToC({
                 onPointerMove={handlePointerMove}
                 onPointerDown={handlePointerDown}
                 onPageTurn={onPageTurn}
+                pages={pages}
+                setPages={setPages}
                 key={`page:${currentPage},key:${keyCount}`}
               />
             );

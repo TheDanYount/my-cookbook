@@ -55,10 +55,10 @@ export async function getRecipes(cookbookId) {
   return recipePageDataArray;
 }
 
-export async function getRecipeByOrder(cookbookId, order) {
+export async function getRecipeById(cookbookId, recipeId) {
   const recipePageDataArray: PageData[] = [];
   const result = await fetch(
-    `/api/read-recipe-by-order/${cookbookId}/${order}`
+    `/api/read-recipe-by-id/${cookbookId}/${recipeId}`
   );
   const formattedResult = await result.json();
   if (!result.ok) throw new Error(formattedResult.error);
@@ -74,6 +74,7 @@ export async function getRecipeByOrder(cookbookId, order) {
           type: 'title',
           text: recipe.title,
           length: recipe.length,
+          id: recipe.recipeId,
         });
       }
       if (ingredients[i] && !usedImage) {
@@ -112,16 +113,19 @@ export async function getRecipeByOrder(cookbookId, order) {
 
 export function buildToc(pages: PageData[]) {
   const recipes: PageData['data'] = [];
+  let runningTotal = 3;
   for (let i = 0; i < pages.length; i++) {
     if (pages[i].type === 'recipe') {
       if (pages[i].data[0].type === 'title') {
+        const length = pages[i].data[0].length;
         recipes.push({
           type: 'recipe',
           text: pages[i].data[0].text,
-          pageNum: i + 3,
-          length: pages[i].data[0].length,
+          pageNum: runningTotal,
+          length: length,
           id: pages[i].data[0].id,
         });
+        if (length) runningTotal += length;
       }
     }
   }
@@ -131,13 +135,19 @@ export function buildToc(pages: PageData[]) {
   };
 }
 
-export function addToToc(pages: PageData[], title: string, pageNum: number) {
+export function addToToc(pages: PageData[], recipe) {
   for (let i = pages.length - 1; i > 0; i--) {
     if (pages[i].type === 'toc') {
+      const prevPageNum = pages[i]?.data[pages[i].data.length - 2]?.pageNum;
+      const prevPageLength = pages[i]?.data[pages[i].data.length - 2]?.length;
+      const newPageNum =
+        prevPageNum && prevPageLength ? prevPageNum + prevPageLength : 0;
       pages[i].data.splice(-1, 0, {
         type: 'recipe',
-        text: title,
-        pageNum: pageNum,
+        text: recipe.title,
+        pageNum: newPageNum,
+        length: recipe.length,
+        id: recipe.recipeId,
       });
     }
   }
@@ -156,4 +166,26 @@ export function getRecipeForm() {
   };
 }
 
-export function convertRecipeToForm(pageNum) {}
+export function convertRecipeToForm(
+  pages: PageData[],
+  setPages: (pages: PageData[]) => void,
+  pageNum: number,
+  length: number
+) {
+  const pagesToConvert: PageData[] = [];
+  for (let i = 0; i < length; i++) {
+    pagesToConvert.push(pages[pageNum + i]);
+  }
+  const newPages = pagesToConvert.map((page) => {
+    return {
+      type: 'recipeForm',
+      data: page.data,
+    };
+  });
+  newPages[newPages.length - 1].data.push({ type: 'submit' });
+  setPages([
+    ...pages.slice(0, pageNum),
+    ...newPages,
+    ...pages.slice(pageNum + length),
+  ]);
+}

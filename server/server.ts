@@ -45,20 +45,20 @@ app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
 });
 
 app.get(
-  '/api/read-recipe-by-order/:cookbookId/:order',
+  '/api/read-recipe-by-id/:cookbookId/:recipeId',
   async (req, res, next) => {
     try {
-      const { cookbookId, order } = req.params;
+      const { cookbookId, recipeId } = req.params;
       if (!Number.isInteger(+cookbookId))
         throw new ClientError(400, 'cookbookId must be an integer');
-      if (!Number.isInteger(+order))
+      if (!Number.isInteger(+recipeId))
         throw new ClientError(400, `order must be an integer`);
       const sql = `
     select *
     from "recipes"
-    where ("cookbookId" = $1 AND "order" = $2)
+    where ("cookbookId" = $1 AND "recipeId" = $2)
     `;
-      const result = await db.query(sql, [cookbookId, order]);
+      const result = await db.query(sql, [cookbookId, recipeId]);
       if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
       res.status(200).json(result.rows);
     } catch (err) {
@@ -119,45 +119,51 @@ app.post(
   }
 );
 
-app.put('/api/update-recipe/:cookbookId/:recipeId', async (req, res, next) => {
-  try {
-    const { cookbookId, recipeId } = req.params;
-    if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
-    if (!recipeId) throw new ClientError(400, 'recipeId is required');
-    const imageUrl = req.file
-      ? `/images/recipe-images/${req.file.filename}`
-      : '';
-    const { title, ingredients, directions, notes, length, order } = req.body;
-    // Remove once form is updated
-    const isFavorite = false;
-    // Remove once form is updated
-    const isPublic = false;
-    const sql = `
+app.put(
+  '/api/update-recipe/:cookbookId/:recipeId',
+  uploadsMiddlewareRecipes.single('image'),
+  async (req, res, next) => {
+    try {
+      const { cookbookId, recipeId } = req.params;
+      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
+      if (!recipeId) throw new ClientError(400, 'recipeId is required');
+      const potentialImageUrl = req.file
+        ? `/images/recipe-images/${req.file.filename}`
+        : '';
+      const { title, ingredients, directions, notes, length, order, imageUrl } =
+        req.body;
+      const trueUrl = potentialImageUrl || imageUrl;
+      // Remove once form is updated
+      const isFavorite = false;
+      // Remove once form is updated
+      const isPublic = false;
+      const sql = `
     update "recipes"
     set "title" = $3, "imageUrl" = $4, "isFavorite" = $5, "ingredients" = $6,
     "directions" = $7, "notes" = $8, "order" = $9, "length" = $10, "isPublic" = $11
     where ("cookbookId" = $1 AND "recipeId" = $2)
     returning *;
     `;
-    const result = await db.query(sql, [
-      cookbookId,
-      recipeId,
-      title,
-      imageUrl,
-      isFavorite,
-      ingredients,
-      directions,
-      notes,
-      order,
-      length,
-      isPublic,
-    ]);
-    if (!result.rows[0]) throw new ClientError(404, `Recipe not found`);
-    res.status(200).json(result.rows[0]);
-  } catch (err) {
-    next(err);
+      const result = await db.query(sql, [
+        cookbookId,
+        recipeId,
+        title,
+        trueUrl,
+        isFavorite,
+        ingredients,
+        directions,
+        notes,
+        order,
+        length,
+        isPublic,
+      ]);
+      if (!result.rows[0]) throw new ClientError(404, `Recipe not found`);
+      res.status(200).json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
 app.put(
   '/api/re-order-recipes/:cookbookId/:recipeId',

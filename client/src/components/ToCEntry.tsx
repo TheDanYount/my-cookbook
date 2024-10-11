@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { RxCaretSort } from 'react-icons/rx';
 import { FaPencilAlt } from 'react-icons/fa';
 import { convertRecipeToForm } from '../lib/page-scaffolding';
+import { PageData } from './Cookbook';
 
 type TocEntryProps = {
   text: string;
@@ -11,6 +12,8 @@ type TocEntryProps = {
   onPointerMove: (event) => void;
   onPointerDown: (event) => void;
   onPageTurn: (number) => void;
+  pages: PageData[];
+  setPages: (pages: PageData[]) => void;
 };
 
 export function ToCEntry({
@@ -21,6 +24,8 @@ export function ToCEntry({
   onPointerMove,
   onPointerDown,
   onPageTurn,
+  pages,
+  setPages,
 }: TocEntryProps) {
   const { pageNum: currentPage } = useParams();
 
@@ -30,7 +35,7 @@ export function ToCEntry({
   }
 
   function handleEdit() {
-    convertRecipeToForm(pageNum);
+    convertRecipeToForm(pages, setPages, pageNum, length);
     handleRecipeNavigation();
   }
 
