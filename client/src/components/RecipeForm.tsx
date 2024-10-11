@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
-import { addToToc, getRecipeByOrder } from '../lib/page-skeletons';
+import { addToToc, getRecipeById } from '../lib/page-scaffolding';
 
 type RecipeFormProps = IndividualPageProps & {
   cookbookId: number;
@@ -19,19 +19,22 @@ export function RecipeForm({
   const navigate = useNavigate();
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
+  const [, setRerender] = useState<object>();
 
   useEffect(() => {
     setImgUrl(imgStore?.fileUrl);
   }, [imgStore?.fileUrl]);
 
   async function imgPreview(file, data) {
+    /*
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (e) => {
-      setImgUrl(e.target?.result as string);
-      data.file = file;
-      data.fileUrl = e.target?.result as string;
-    };
+      console.log(e.target?.result);
+      console.log(data);*/
+    setImgUrl(URL.createObjectURL(file));
+    data.file = file;
+    //if (imgStore) imgStore.fileUrl = undefined;
   }
 
   async function handlePsuedoSubmit() {
@@ -58,22 +61,66 @@ export function RecipeForm({
     const notes = extractText(formPages, 'notes'); // An array
     data.append('notes', JSON.stringify(notes));
     data.append('length', String(endOfForm + 1 - startOfForm));
-    data.append('order', String(startOfForm));
-    try {
-      const result = await fetch('/api/create-recipe', {
-        method: 'POST',
-        body: data,
-      });
-      const formattedResult = await result.json();
-      if (!result.ok) throw new Error(formattedResult.error);
-      alert('Recipe added successfully!');
-      const newRecipePages = await getRecipeByOrder(cookbookId, startOfForm);
-      pages.splice(startOfForm, endOfForm + 1 - startOfForm, ...newRecipePages);
-      setPages(pages);
-      addToToc(pages, title, startOfForm);
-      navigate(`/cookbook/${cookbookId}/page/2`);
-    } catch (err) {
-      alert(err);
+    if (imgStore?.fileUrl) data.append('imageUrl', imgStore?.fileUrl);
+    if (formPages[0].data[0].id) {
+      data.append(
+        'order',
+        String(
+          pages[2].data.findIndex(
+            (entry) => entry?.id === formPages[0].data[0].id
+          )
+        )
+      );
+      try {
+        const result = await fetch(
+          `/api/update-recipe/${cookbookId}/${formPages[0].data[0].id}`,
+          {
+            method: 'PUT',
+            body: data,
+          }
+        );
+        const formattedResult = await result.json();
+        if (!result.ok) throw new Error(formattedResult.error);
+        alert('Recipe updated successfully!');
+        const newRecipePages = await getRecipeById(
+          cookbookId,
+          formattedResult.recipeId
+        );
+        pages.splice(
+          startOfForm,
+          endOfForm + 1 - startOfForm,
+          ...newRecipePages
+        );
+        setPages(pages);
+        navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
+      } catch (err) {
+        alert(err);
+      }
+    } else {
+      data.append('order', String(pages[2].data.length - 1));
+      try {
+        const result = await fetch('/api/create-recipe', {
+          method: 'POST',
+          body: data,
+        });
+        const formattedResult = await result.json();
+        if (!result.ok) throw new Error(formattedResult.error);
+        alert('Recipe added successfully!');
+        const newRecipePages = await getRecipeById(
+          cookbookId,
+          formattedResult.recipeId
+        );
+        pages.splice(
+          startOfForm,
+          endOfForm + 1 - startOfForm,
+          ...newRecipePages
+        );
+        setPages(pages);
+        addToToc(pages, formattedResult);
+        navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
+      } catch (err) {
+        alert(err);
+      }
     }
   }
   return (
@@ -87,7 +134,10 @@ export function RecipeForm({
                 name="title"
                 className={`block text-center text-base w-full resize-none mb-1 bg-[#ffffff88]`}
                 placeholder="[Input title here]"
-                onChange={(event) => (e.text = event.currentTarget.value)}
+                onChange={(event) => {
+                  setRerender({});
+                  return (e.text = event.currentTarget.value);
+                }}
                 value={e.text}
                 key={`page:${currentPage},key:${keyCount}`}></textarea>
             );
@@ -129,7 +179,10 @@ export function RecipeForm({
                   placeholder="[Input ingredients here]"
                   className={`block basis-[151px] px-[2px] self-stretch resize-none my-1 bg-[#ffffff88]`}
                   style={{ fontSize: '12px' }}
-                  onChange={(event) => (e.text = event.currentTarget.value)}
+                  onChange={(event) => {
+                    setRerender({});
+                    return (e.text = event.currentTarget.value);
+                  }}
                   value={e.text}></textarea>
               </div>
             );
@@ -143,7 +196,10 @@ export function RecipeForm({
                   placeholder="[Input ingredients here]"
                   className={`block basis-[151px] px-[2px] resize-none my-1 bg-[#ffffff88]`}
                   style={{ fontSize: '12px' }}
-                  onChange={(event) => (e.text = event.currentTarget.value)}
+                  onChange={(event) => {
+                    setRerender({});
+                    return (e.text = event.currentTarget.value);
+                  }}
                   value={e.text}></textarea>
               </div>
             );
@@ -154,7 +210,10 @@ export function RecipeForm({
                 placeholder="[Input directions here]"
                 className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
                 style={{ fontSize: '12px' }}
-                onChange={(event) => (e.text = event.currentTarget.value)}
+                onChange={(event) => {
+                  setRerender({});
+                  return (e.text = event.currentTarget.value);
+                }}
                 value={e.text}
                 key={`page:${currentPage},key:${keyCount}`}></textarea>
             );
@@ -165,7 +224,10 @@ export function RecipeForm({
                 placeholder="[Input notes here]"
                 className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
                 style={{ fontSize: '12px' }}
-                onChange={(event) => (e.text = event.currentTarget.value)}
+                onChange={(event) => {
+                  setRerender({});
+                  return (e.text = event.currentTarget.value);
+                }}
                 value={e.text}
                 key={`page:${currentPage},key:${keyCount}`}></textarea>
             );

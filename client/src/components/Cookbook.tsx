@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Page } from './Page';
 import { useWindowDimensions } from '../lib/window-dimensions';
-import { buildToc, getRecipes } from '../lib/page-skeletons';
+import { buildToc, getRecipes } from '../lib/page-scaffolding';
 
 // For development
 const style = '#4C301E';
@@ -15,6 +15,8 @@ export type PageData = {
     file?: unknown;
     fileUrl?: string;
     pageNum?: number;
+    length?: number;
+    id?: number;
   }[];
 };
 
@@ -41,6 +43,7 @@ export function Cookbook() {
       try {
         const recipes = await getRecipes(cookbookId);
         if (recipes) {
+          console.log(recipes);
           setPages(() => {
             const toc = buildToc(recipes);
             return [...dummyPagesForDevelopment, toc, ...recipes];
@@ -94,7 +97,7 @@ export function Cookbook() {
           <Page
             left={true}
             onPageTurn={handlePageTurn}
-            pageNum={leftPage}
+            thisPageNum={leftPage}
             pageData={pages[leftPage]}
             pages={pages}
             setPages={setPages}
@@ -109,7 +112,7 @@ export function Cookbook() {
           <Page
             left={false}
             onPageTurn={handlePageTurn}
-            pageNum={leftPage + 1}
+            thisPageNum={leftPage + 1}
             pageData={pages[leftPage + 1]}
             pages={pages}
             setPages={setPages}
