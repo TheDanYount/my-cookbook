@@ -136,7 +136,7 @@ export function ToC({
             case 'title':
               return (
                 <h1
-                  className="text-center text-base"
+                  className='text-center text-base font-["Shantell_Sans"] font-semibold'
                   key={`page:${currentPage},key:${keyCount}`}>
                   Table of Contents
                 </h1>

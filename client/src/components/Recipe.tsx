@@ -22,7 +22,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
           case 'title':
             return (
               <h1
-                className="text-center text-base w-full"
+                className='text-center text-base w-full font-["Shantell_Sans"] font-semibold'
                 key={`page:${currentPage},key:${keyCount}`}>
                 {formattedText}
               </h1>
