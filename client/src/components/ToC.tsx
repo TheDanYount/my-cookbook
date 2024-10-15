@@ -66,12 +66,14 @@ export function ToC({
   }
 
   function finishPointerHandling() {
-    setEntryToMove(undefined);
-    setIsPointerDown(false);
-    reOrderRecipes(
-      pages[2].data.filter((e) => e.type === 'recipe'),
-      cookbookId
-    );
+    if (isPointerDown) {
+      setEntryToMove(undefined);
+      setIsPointerDown(false);
+      reOrderRecipes(
+        pages[2].data.filter((e) => e.type === 'recipe'),
+        cookbookId
+      );
+    }
   }
 
   function handlePointerUp() {
@@ -95,22 +97,30 @@ export function ToC({
   async function handleDeleteConfirm() {
     if (!deleteConfirmId) return;
     deleteRecipe(cookbookId, deleteConfirmId);
+    const pDDataCopy = pageData.data.filter((entry) => {
+      if (entry.type === 'recipe' && entry.id === deleteConfirmId) return false;
+      return true;
+    });
+    reOrderTocEntries(pDDataCopy);
     let recipeToBeDeletedFound = false;
-    setPages(
-      pages.filter((page) => {
+    const newPages = [
+      ...pages.slice(0, 2),
+      { type: 'toc', data: pDDataCopy },
+      ...pages.slice(3).filter((page) => {
         if (
           page?.data[0]?.type === 'title' &&
           page.data[0].id === deleteConfirmId
         ) {
-          console.log('found!');
           recipeToBeDeletedFound = true;
           return false;
         }
         if (recipeToBeDeletedFound && !(page?.data[0]?.type === 'title'))
           return false;
         return true;
-      })
-    );
+      }),
+    ];
+    setPages(newPages);
+    setDeleteConfirmId(undefined);
   }
 
   return (
