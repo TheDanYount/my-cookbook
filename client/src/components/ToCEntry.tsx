@@ -5,29 +5,28 @@ import { convertRecipeToForm } from '../lib/page-scaffolding';
 import { PageData } from './Cookbook';
 
 type TocEntryProps = {
-  text: string;
-  pageNum: number;
-  length: number;
+  entry: { text: string; pageNum: number; length: number; id: number };
   placementOnPage: number;
   onPointerMove: (event) => void;
   onPointerDown: (event) => void;
   onPageTurn: (number) => void;
   pages: PageData[];
   setPages: (pages: PageData[]) => void;
+  onDelete: (id: number) => void;
 };
 
 export function ToCEntry({
-  text,
-  pageNum,
-  length,
+  entry,
   placementOnPage,
   onPointerMove,
   onPointerDown,
   onPageTurn,
   pages,
   setPages,
+  onDelete,
 }: TocEntryProps) {
   const { pageNum: currentPage } = useParams();
+  const { pageNum, text, length, id } = entry;
 
   function handleRecipeNavigation() {
     if (!currentPage) return;
@@ -54,7 +53,7 @@ export function ToCEntry({
           <div className="my-[2px]" onClick={handleEdit}>
             <FaPencilAlt />
           </div>
-          <div className="my-[2px]" onClick={handleEdit}>
+          <div className="my-[2px]" onClick={() => onDelete(id)}>
             <FaTrash />
           </div>
           <p className="select-none" onClick={handleRecipeNavigation}>
