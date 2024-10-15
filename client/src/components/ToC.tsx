@@ -1,7 +1,7 @@
 import { useState, useRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
-import { getRecipeForm } from '../lib/page-scaffolding';
+import { getRecipeForm, deleteRecipe } from '../lib/page-scaffolding';
 import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
 import { DeleteConfirm } from './DeleteConfirm';
@@ -88,9 +88,12 @@ export function ToC({
     onPageTurn(pages.length - +pageNum);
   }
 
-  function handleDelete(id) {
-    console.log('I should delete', id);
+  function handleDeleteClick(id) {
     setDeleteConfirmId(id);
+  }
+
+  async function handleDeleteConfirm() {
+    if (deleteConfirmId) deleteRecipe(cookbookId, deleteConfirmId);
   }
 
   return (
@@ -106,20 +109,11 @@ export function ToC({
           switch (e.type) {
             case 'title':
               return (
-                <Fragment key={`page:${currentPage},key:${keyCount}`}>
-                  <h1 className="text-center text-base">Table of Contents</h1>
-                  {deleteConfirmId &&
-                    deleteConfirmId === e.id &&
-                    page &&
-                    createPortal(
-                      <DeleteConfirm
-                        text={e.text as string}
-                        id={e.id as number}
-                        setDeleteConfirmId={setDeleteConfirmId}
-                      />,
-                      page as HTMLDivElement
-                    )}
-                </Fragment>
+                <h1
+                  className="text-center text-base"
+                  key={`page:${currentPage},key:${keyCount}`}>
+                  Table of Contents
+                </h1>
               );
             case 'recipe':
               return (
@@ -132,7 +126,7 @@ export function ToC({
                     onPageTurn={onPageTurn}
                     pages={pages}
                     setPages={setPages}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteClick}
                   />
                   {deleteConfirmId &&
                     deleteConfirmId === e.id &&
@@ -140,8 +134,8 @@ export function ToC({
                     createPortal(
                       <DeleteConfirm
                         text={e.text as string}
-                        id={e.id as number}
                         setDeleteConfirmId={setDeleteConfirmId}
+                        onDeleteConfirm={handleDeleteConfirm}
                       />,
                       page as HTMLDivElement
                     )}
@@ -149,26 +143,15 @@ export function ToC({
               );
             case 'addRecipeButton':
               return (
-                <Fragment key={`page:${currentPage},key:${keyCount}`}>
-                  <div className="relative">
-                    <button
-                      className="h-[24px] text-left hover:scale-110"
-                      onClick={handleNewRecipe}>
-                      + Add Recipe
-                    </button>
-                  </div>
-                  {deleteConfirmId &&
-                    deleteConfirmId === e.id &&
-                    page &&
-                    createPortal(
-                      <DeleteConfirm
-                        text={e.text as string}
-                        id={e.id as number}
-                        setDeleteConfirmId={setDeleteConfirmId}
-                      />,
-                      page as HTMLDivElement
-                    )}
-                </Fragment>
+                <div
+                  className="relative"
+                  key={`page:${currentPage},key:${keyCount}`}>
+                  <button
+                    className="h-[24px] text-left hover:scale-110"
+                    onClick={handleNewRecipe}>
+                    + Add Recipe
+                  </button>
+                </div>
               );
           }
         })}

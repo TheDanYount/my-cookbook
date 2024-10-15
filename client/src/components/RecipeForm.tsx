@@ -86,6 +86,7 @@ export function RecipeForm({
           cookbookId,
           formattedResult.recipeId
         );
+        if (!newRecipePages) throw new Error('Failed to fetch new recipe!');
         pages.splice(
           startOfForm,
           endOfForm + 1 - startOfForm,
@@ -110,6 +111,7 @@ export function RecipeForm({
           cookbookId,
           formattedResult.recipeId
         );
+        if (!newRecipePages) throw new Error('Failed to fetch new recipe!');
         pages.splice(
           startOfForm,
           endOfForm + 1 - startOfForm,
