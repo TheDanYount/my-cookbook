@@ -181,8 +181,30 @@ app.put(
     returning *;
     `;
       const result = await db.query(sql, [cookbookId, recipeId, order]);
-      if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
+      if (!result.rows[0]) throw new ClientError(404, `Recipe not found`);
       res.status(200).json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.delete(
+  '/api/delete-recipe/:cookbookId/:recipeId',
+  async (req, res, next) => {
+    try {
+      const { cookbookId, recipeId } = req.params;
+      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
+      if (!recipeId) throw new ClientError(400, 'recipeId is required');
+      const sql = `
+    delete
+    from "recipes"
+    where ("cookbookId" = $1 AND "recipeId" = $2)
+    returning *;
+    `;
+      const result = await db.query(sql, [cookbookId, recipeId]);
+      if (!result.rows[0]) throw new ClientError(404, `Recipe not found`);
+      res.sendStatus(204);
     } catch (err) {
       next(err);
     }
