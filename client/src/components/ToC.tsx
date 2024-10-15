@@ -93,7 +93,24 @@ export function ToC({
   }
 
   async function handleDeleteConfirm() {
-    if (deleteConfirmId) deleteRecipe(cookbookId, deleteConfirmId);
+    if (!deleteConfirmId) return;
+    deleteRecipe(cookbookId, deleteConfirmId);
+    let recipeToBeDeletedFound = false;
+    setPages(
+      pages.filter((page) => {
+        if (
+          page?.data[0]?.type === 'title' &&
+          page.data[0].id === deleteConfirmId
+        ) {
+          console.log('found!');
+          recipeToBeDeletedFound = true;
+          return false;
+        }
+        if (recipeToBeDeletedFound && !(page?.data[0]?.type === 'title'))
+          return false;
+        return true;
+      })
+    );
   }
 
   return (
@@ -104,7 +121,6 @@ export function ToC({
         onPointerLeave={handlePointerLeave}
         ref={tocParentDiv}>
         {pageData.data.map((e) => {
-          console.log(page);
           keyCount++;
           switch (e.type) {
             case 'title':
