@@ -43,7 +43,6 @@ export function Cookbook() {
       try {
         const recipes = await getRecipes(cookbookId);
         if (recipes) {
-          console.log(recipes);
           setPages(() => {
             const toc = buildToc(recipes);
             return [...dummyPagesForDevelopment, toc, ...recipes];

@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef, Fragment } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
-import { getRecipeForm } from '../lib/page-scaffolding';
+import { getRecipeForm, deleteRecipe } from '../lib/page-scaffolding';
 import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
+import { DeleteConfirm } from './DeleteConfirm';
 
 type tocIndividualPageProps = IndividualPageProps & {
   onPageTurn: (num) => void;
+};
+
+type entry = {
+  text: string;
+  pageNum: number;
+  length: number;
+  id: number;
 };
 
 export function ToC({
@@ -19,6 +28,9 @@ export function ToC({
   const currentPage = pages.findIndex((e) => e === pageData);
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [entryToMove, setEntryToMove] = useState<HTMLElement>();
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number>();
+  const tocParentDiv = useRef<HTMLDivElement | null>(null);
+  const page = tocParentDiv?.current?.parentNode;
 
   const handlePointerMove = (event) => {
     if (!pageNum) return;
@@ -54,12 +66,14 @@ export function ToC({
   }
 
   function finishPointerHandling() {
-    setEntryToMove(undefined);
-    setIsPointerDown(false);
-    reOrderRecipes(
-      pages[2].data.filter((e) => e.type === 'recipe'),
-      cookbookId
-    );
+    if (isPointerDown) {
+      setEntryToMove(undefined);
+      setIsPointerDown(false);
+      reOrderRecipes(
+        pages[2].data.filter((e) => e.type === 'recipe'),
+        cookbookId
+      );
+    }
   }
 
   function handlePointerUp() {
@@ -75,55 +89,100 @@ export function ToC({
     if (!pageNum) return;
     onPageTurn(pages.length - +pageNum);
   }
-  return (
-    <div
-      className="text-xs px-[30px]"
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerLeave}>
-      {pageData.data.map((e) => {
-        keyCount++;
-        switch (e.type) {
-          case 'title':
-            return (
-              <h1
-                className="text-center text-base"
-                key={`page:${currentPage},key:${keyCount}`}>
-                Table of Contents
-              </h1>
-            );
-          case 'recipe':
-            e.text = e.text as string;
-            e.pageNum = e.pageNum as number;
-            e.length = e.length as number;
-            return (
-              <ToCEntry
-                text={e.text}
-                pageNum={e.pageNum}
-                length={e.length}
-                placementOnPage={keyCount}
-                onPointerMove={handlePointerMove}
-                onPointerDown={handlePointerDown}
-                onPageTurn={onPageTurn}
-                pages={pages}
-                setPages={setPages}
-                key={`page:${currentPage},key:${keyCount}`}
-              />
-            );
-          case 'addRecipeButton':
-            return (
-              <div
-                className="relative"
-                key={`page:${currentPage},key:${keyCount}`}>
-                <button
-                  className="h-[24px] text-left hover:scale-110"
-                  onClick={handleNewRecipe}>
-                  + Add Recipe
-                </button>
-              </div>
-            );
+
+  function handleDeleteClick(id) {
+    setDeleteConfirmId(id);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmId) return;
+    deleteRecipe(cookbookId, deleteConfirmId);
+    const pDDataCopy = pageData.data.filter((entry) => {
+      if (entry.type === 'recipe' && entry.id === deleteConfirmId) return false;
+      return true;
+    });
+    reOrderTocEntries(pDDataCopy);
+    let recipeToBeDeletedFound = false;
+    const newPages = [
+      ...pages.slice(0, 2),
+      { type: 'toc', data: pDDataCopy },
+      ...pages.slice(3).filter((page) => {
+        if (
+          page?.data[0]?.type === 'title' &&
+          page.data[0].id === deleteConfirmId
+        ) {
+          recipeToBeDeletedFound = true;
+          return false;
         }
-      })}
-    </div>
+        if (recipeToBeDeletedFound && !(page?.data[0]?.type === 'title'))
+          return false;
+        return true;
+      }),
+    ];
+    setPages(newPages);
+    setDeleteConfirmId(undefined);
+  }
+
+  return (
+    <>
+      <div
+        className="text-xs px-[30px]"
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
+        ref={tocParentDiv}>
+        {pageData.data.map((e) => {
+          keyCount++;
+          switch (e.type) {
+            case 'title':
+              return (
+                <h1
+                  className="text-center text-base"
+                  key={`page:${currentPage},key:${keyCount}`}>
+                  Table of Contents
+                </h1>
+              );
+            case 'recipe':
+              return (
+                <Fragment key={`page:${currentPage},key:${keyCount}`}>
+                  <ToCEntry
+                    entry={e as entry}
+                    placementOnPage={keyCount}
+                    onPointerMove={handlePointerMove}
+                    onPointerDown={handlePointerDown}
+                    onPageTurn={onPageTurn}
+                    pages={pages}
+                    setPages={setPages}
+                    onDelete={handleDeleteClick}
+                  />
+                  {deleteConfirmId &&
+                    deleteConfirmId === e.id &&
+                    page &&
+                    createPortal(
+                      <DeleteConfirm
+                        text={e.text as string}
+                        setDeleteConfirmId={setDeleteConfirmId}
+                        onDeleteConfirm={handleDeleteConfirm}
+                      />,
+                      page as HTMLDivElement
+                    )}
+                </Fragment>
+              );
+            case 'addRecipeButton':
+              return (
+                <div
+                  className="relative"
+                  key={`page:${currentPage},key:${keyCount}`}>
+                  <button
+                    className="h-[24px] text-left hover:scale-110"
+                    onClick={handleNewRecipe}>
+                    + Add Recipe
+                  </button>
+                </div>
+              );
+          }
+        })}
+      </div>
+    </>
   );
 }
 

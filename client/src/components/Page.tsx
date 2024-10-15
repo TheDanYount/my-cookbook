@@ -32,7 +32,7 @@ export function Page({
   const { width } = useWindowDimensions();
   return (
     <div
-      className={`flex flex-col justify-between w-[281px] h-[346px] bg-gradient-to-r
+      className={`relative flex flex-col justify-between w-[281px] h-[346px] bg-gradient-to-r
         ${left ? 'from-[#FFE8AA]' : 'from-[#A89971]'}
         ${left ? 'from-90%' : 'from-0%'}
         ${left ? 'to-[#A89971]' : 'to-[#FFE8AA]'}

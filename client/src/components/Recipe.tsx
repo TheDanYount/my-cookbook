@@ -4,7 +4,6 @@ import { IndividualPageProps } from './Page';
 export function Recipe({ pageData, pages }: IndividualPageProps) {
   let keyCount = -1;
   const currentPage = pages.findIndex((e) => e === pageData);
-  console.log(pageData);
 
   return (
     <div className="text-xs px-[10px]">

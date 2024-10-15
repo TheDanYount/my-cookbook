@@ -5,3 +5,7 @@
 * {
   box-sizing: border-box;
 }
+
+.children-hover:hover > * {
+  transform: scale(1.1);
+}
