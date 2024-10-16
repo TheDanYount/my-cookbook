@@ -88,7 +88,7 @@ export function Cookbook() {
         smallScreenShift && pageNum && +pageNum - leftPage === 1
           ? 'ml-[-234px]'
           : ''
-      } flex w-[588px] m-[60px]`}>
+      } flex w-[588px] mt-[60px] ${width < 660 ? 'ml-[60px]' : 'mx-auto'}`}>
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
         style={{ backgroundColor: style }}>

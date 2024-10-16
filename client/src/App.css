@@ -9,3 +9,7 @@
 .children-hover:hover > * {
   transform: scale(1.1);
 }
+
+.children-hover-sm:hover > * {
+  transform: scale(1.05);
+}
