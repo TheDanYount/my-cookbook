@@ -84,7 +84,7 @@ export function Cookbook() {
 
   return (
     <div
-      className={`font-["Patrick_Hand"] ${
+      className={`font-["Patrick_Hand"] text-[14px] ${
         smallScreenShift && pageNum && +pageNum - leftPage === 1
           ? 'ml-[-234px]'
           : ''

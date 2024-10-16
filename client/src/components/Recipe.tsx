@@ -22,7 +22,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
           case 'title':
             return (
               <h1
-                className='text-center text-base w-full font-["Shantell_Sans"] font-semibold'
+                className='text-center text-[18px] my-[4px] w-full font-["Shantell_Sans"] font-semibold'
                 key={`page:${currentPage},key:${keyCount}`}>
                 {formattedText}
               </h1>
@@ -40,7 +40,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
                 </div>
                 <p
                   className={`block basis-[151px] px-[2px] my-1`}
-                  style={{ fontSize: '12px' }}>
+                  style={{ fontSize: '14px' }}>
                   {formattedText}
                 </p>
               </div>
@@ -49,7 +49,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
             return (
               <p
                 className={`px-[2px] my-1`}
-                style={{ fontSize: '12px' }}
+                style={{ fontSize: '14px' }}
                 key={`page:${currentPage},key:${keyCount}`}>
                 {formattedText}
               </p>
@@ -58,7 +58,7 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
             return (
               <p
                 className={`px-[2px] my-1`}
-                style={{ fontSize: '12px' }}
+                style={{ fontSize: '14px' }}
                 key={`page:${currentPage},key:${keyCount}`}>
                 {formattedText}
               </p>

@@ -40,20 +40,20 @@ export function ToCEntry({
 
   return (
     <div
-      className="relative h-[16px]"
+      className="relative h-[18px]"
       data-title={text}
       data-length={length}
       data-placementonpage={placementOnPage}
       onPointerMove={onPointerMove}>
       <div className="absolute children-hover flex justify-between items-start w-full">
         <div className="flex hover:cursor-pointer">
-          <div className="text-base" onPointerDown={onPointerDown}>
+          <div className="text-[20px]" onPointerDown={onPointerDown}>
             <RxCaretSort />
           </div>
-          <div className="my-[2px]" onClick={handleEdit}>
+          <div className="text-base my-[2px] " onClick={handleEdit}>
             <FaPencilAlt />
           </div>
-          <div className="my-[2px]" onClick={() => onDelete(id)}>
+          <div className="text-base my-[2px]" onClick={() => onDelete(id)}>
             <FaTrash />
           </div>
           <p className="select-none" onClick={handleRecipeNavigation}>

@@ -56,7 +56,7 @@ export function Page({
           cookbookId={cookbookId}
         />
       )}
-      <div className="flex text-xs self-center">
+      <div className="flex text-[14px] self-center">
         {left && thisPageNum > 1 && (
           <button onClick={() => onPageTurn(-2)}>Back</button>
         )}

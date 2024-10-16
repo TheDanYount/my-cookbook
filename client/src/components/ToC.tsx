@@ -126,7 +126,7 @@ export function ToC({
   return (
     <>
       <div
-        className="text-xs px-[30px]"
+        className="px-[30px]"
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
         ref={tocParentDiv}>
@@ -136,7 +136,7 @@ export function ToC({
             case 'title':
               return (
                 <h1
-                  className='text-center text-base font-["Shantell_Sans"] font-semibold'
+                  className='text-center text-[18px] font-["Shantell_Sans"] font-semibold'
                   key={`page:${currentPage},key:${keyCount}`}>
                   Table of Contents
                 </h1>
