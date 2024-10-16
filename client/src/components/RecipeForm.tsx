@@ -1,19 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
 import { addToToc, getRecipeById } from '../lib/page-scaffolding';
+import { CookbookContext } from './CookbookContext';
 
-type RecipeFormProps = IndividualPageProps & {
-  cookbookId: number;
-};
-
-export function RecipeForm({
-  pageData,
-  pages,
-  setPages,
-  cookbookId,
-}: RecipeFormProps) {
+export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
+  const { cookbookId } = useContext(CookbookContext);
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
   const [imgUrl, setImgUrl] = useState<string>();
   const navigate = useNavigate();

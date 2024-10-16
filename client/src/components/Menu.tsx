@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { FaBars } from 'react-icons/fa6';
 import { useWindowDimensions } from '../lib/window-dimensions';
+import { CookbookContext } from './CookbookContext';
 
 export function Menu() {
   const { width } = useWindowDimensions();
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const { cookbookId } = useContext(CookbookContext);
+  console.log(cookbookId);
+  useEffect(() => {
+    if (cookbookId === undefined) setIsOpen(true);
+  }, [cookbookId]);
   return (
     <>
       <div

@@ -100,7 +100,6 @@ export function Cookbook() {
             pageData={pages[leftPage]}
             pages={pages}
             setPages={setPages}
-            cookbookId={cookbookId}
           />
         )}
       </div>
@@ -115,7 +114,6 @@ export function Cookbook() {
             pageData={pages[leftPage + 1]}
             pages={pages}
             setPages={setPages}
-            cookbookId={cookbookId}
           />
         )}
       </div>

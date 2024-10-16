@@ -11,7 +11,6 @@ type Props = {
   pageData: PageData;
   pages: PageData[];
   setPages: (pages: PageData[]) => void;
-  cookbookId;
 };
 
 export type IndividualPageProps = {
@@ -27,7 +26,6 @@ export function Page({
   pageData,
   pages,
   setPages,
-  cookbookId,
 }: Props) {
   const { width } = useWindowDimensions();
   return (
@@ -49,12 +47,7 @@ export function Page({
         <Recipe pageData={pageData} pages={pages} setPages={setPages} />
       )}
       {pageData.type === 'recipeForm' && (
-        <RecipeForm
-          pageData={pageData}
-          pages={pages}
-          setPages={setPages}
-          cookbookId={cookbookId}
-        />
+        <RecipeForm pageData={pageData} pages={pages} setPages={setPages} />
       )}
       <div className="flex text-[14px] self-center">
         {left && thisPageNum > 1 && (
