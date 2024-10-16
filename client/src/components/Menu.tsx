@@ -9,8 +9,8 @@ export function Menu() {
   return (
     <>
       <div
-        className={`absolute top-0 ${
-          isOpen ? 'w-4/5 left-[10%]' : 'w-[50px]'
+        className={`absolute top-0 transition-all duration-500 ${
+          isOpen ? 'w-4/5 left-[10%]' : 'w-[50px] left-0'
         } h-full bg-[#C45056] font-["Shantell_Sans"] text-white z-50`}>
         <div className="flex justify-between">
           <button
