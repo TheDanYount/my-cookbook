@@ -2,10 +2,12 @@
 import 'dotenv/config';
 import express from 'express';
 import pg from 'pg';
+import argon2 from 'argon2';
 import {
   ClientError,
   errorMiddleware,
   uploadsMiddlewareRecipes,
+  uploadsMiddlewareUsers,
 } from './lib/index.js';
 
 const db = new pg.Pool({
@@ -14,6 +16,8 @@ const db = new pg.Pool({
     rejectUnauthorized: false,
   },
 });
+
+const hashKey = process.env.TOKEN_SECRET;
 
 const app = express();
 
@@ -25,6 +29,72 @@ app.use(express.static(reactStaticDir));
 // Static directory for file uploads server/public/
 app.use(express.static(uploadsStaticDir));
 app.use(express.json());
+
+app.post(
+  '/api/auth/sign-up',
+  uploadsMiddlewareUsers.single('image'),
+  async (req, res, next) => {
+    try {
+      const {
+        newPhotoUrl,
+        username,
+        password,
+        email,
+        firstName,
+        lastName,
+        style,
+      } = req.body;
+      const hashedPassword = await argon2.hash(password);
+      const photoUrl = `/images/recipe-images/${req?.file?.filename}`;
+      let sql;
+      let params;
+      if (newPhotoUrl === true) {
+        sql = `
+    insert into "users" ( "photoUrl", "username", "password", "email", "firstName", "lastName", "style", )
+    values ($1, $2, $3, $4, $5, $6, $7)
+    returning *;
+    `;
+        params = [
+          photoUrl,
+          username,
+          hashedPassword,
+          email,
+          firstName,
+          lastName,
+          style,
+        ];
+      } else if (newPhotoUrl === false) {
+        sql = `
+    insert into "users" ( "username", "password", "email", "firstName", "lastName", "style", )
+    values ($1, $2, $3, $4, $5, $6)
+    returning *;
+    `;
+        params = [username, hashedPassword, email, firstName, lastName, style];
+        // For newPhotoUrl === undefined, for the new value of no image
+      } else {
+        sql = `
+    insert into "users" ( "photoUrl", "username", "password", "email", "firstName", "lastName", "style", )
+    values ($1, $2, $3, $4, $5, $6, $7)
+    returning "userId", "username", "createdAt";
+    `;
+        params = [
+          '',
+          username,
+          hashedPassword,
+          email,
+          firstName,
+          lastName,
+          style,
+        ];
+      }
+      const result = await db.query(sql, params);
+      if (!result.rows[0]) throw new ClientError(404, `Sign-up failed`);
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 app.post('/api/create-cookbook', async (req, res, next) => {
   try {
