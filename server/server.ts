@@ -28,11 +28,12 @@ app.use(express.json());
 
 app.post('/api/create-cookbook', async (req, res, next) => {
   try {
-    const { userId, style, title, isPublic } = req.body;
+    const { userId, style, title } = req.body;
     if (!userId) throw new ClientError(400, 'userId is required');
     if (!style) throw new ClientError(400, 'style is required');
     if (!title) throw new ClientError(400, 'title is required');
-    if (!isPublic) throw new ClientError(400, 'isPublic is required');
+    // Remove once form is updated
+    const isPublic = false;
     const sql = `
     insert into "cookbooks" ("userId", "style", "title", "isPublic")
     values ($1, $2, $3, $4)

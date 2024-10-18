@@ -1,11 +1,11 @@
 import { createContext } from 'react';
 
-export type CurrentCookbook = {
+export type Cookbook = {
   cookbookId: number | undefined;
   setId: (num: number) => void;
 };
 
-const defaultCookbook: CurrentCookbook = {
+const defaultCookbook: Cookbook = {
   cookbookId: undefined,
   setId: () => undefined,
 };
