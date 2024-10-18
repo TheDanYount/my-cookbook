@@ -26,46 +26,26 @@ app.use(express.static(reactStaticDir));
 app.use(express.static(uploadsStaticDir));
 app.use(express.json());
 
-app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
+app.post('/api/create-cookbook', async (req, res, next) => {
   try {
-    const { cookbookId } = req.params;
-    if (!Number.isInteger(+cookbookId))
-      throw new ClientError(400, 'cookbookId must be an integer');
+    const { userId, style, title } = req.body;
+    if (!userId) throw new ClientError(400, 'userId is required');
+    if (!style) throw new ClientError(400, 'style is required');
+    if (!title) throw new ClientError(400, 'title is required');
+    // Remove once form is updated
+    const isPublic = false;
     const sql = `
-    select *
-    from "recipes"
-    where "cookbookId" = $1
-    order by "order";
+    insert into "cookbooks" ("userId", "style", "title", "isPublic")
+    values ($1, $2, $3, $4)
+    returning *;
     `;
-    const result = await db.query(sql, [cookbookId]);
-    res.status(200).json(result.rows);
+    const result = await db.query(sql, [userId, style, title, isPublic]);
+    if (!result.rows[0]) throw new ClientError(404, `Cookbook add failed`);
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     next(err);
   }
 });
-
-app.get(
-  '/api/read-recipe-by-id/:cookbookId/:recipeId',
-  async (req, res, next) => {
-    try {
-      const { cookbookId, recipeId } = req.params;
-      if (!Number.isInteger(+cookbookId))
-        throw new ClientError(400, 'cookbookId must be an integer');
-      if (!Number.isInteger(+recipeId))
-        throw new ClientError(400, `order must be an integer`);
-      const sql = `
-    select *
-    from "recipes"
-    where ("cookbookId" = $1 AND "recipeId" = $2)
-    `;
-      const result = await db.query(sql, [cookbookId, recipeId]);
-      if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
-      res.status(200).json(result.rows);
-    } catch (err) {
-      next(err);
-    }
-  }
-);
 
 app.post(
   '/api/create-recipe',
@@ -113,6 +93,48 @@ app.post(
         isPublic,
       ]);
       res.status(201).json(result.rows[0]);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
+  try {
+    const { cookbookId } = req.params;
+    if (!Number.isInteger(+cookbookId))
+      throw new ClientError(400, 'cookbookId must be an integer');
+    const sql = `
+    select *
+    from "recipes"
+    where "cookbookId" = $1
+    order by "order";
+    `;
+    const result = await db.query(sql, [cookbookId]);
+    if (!result.rows[0]) throw new ClientError(404, `Recipe add failed`);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get(
+  '/api/read-recipe-by-id/:cookbookId/:recipeId',
+  async (req, res, next) => {
+    try {
+      const { cookbookId, recipeId } = req.params;
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(400, 'cookbookId must be an integer');
+      if (!Number.isInteger(+recipeId))
+        throw new ClientError(400, `order must be an integer`);
+      const sql = `
+    select *
+    from "recipes"
+    where ("cookbookId" = $1 AND "recipeId" = $2)
+    `;
+      const result = await db.query(sql, [cookbookId, recipeId]);
+      if (!result.rows[0]) throw new ClientError(404, `Recipes not found`);
+      res.status(200).json(result.rows);
     } catch (err) {
       next(err);
     }

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Page } from './Page';
 import { useWindowDimensions } from '../lib/window-dimensions';
 import { buildToc, getRecipes } from '../lib/page-scaffolding';
+import { CookbookContext } from './CookbookContext';
 
 // For development
 const style = '#4C301E';
@@ -26,7 +27,8 @@ const dummyPagesForDevelopment = [
 ];
 
 export function Cookbook() {
-  const { cookbookId, pageNum } = useParams();
+  const { pageNum } = useParams();
+  const { cookbookId } = useContext(CookbookContext);
   const navigate = useNavigate();
   if (!cookbookId || !pageNum) navigate('/NotFound');
   const [isLoading, setIsLoading] = useState<boolean>();
@@ -84,11 +86,11 @@ export function Cookbook() {
 
   return (
     <div
-      className={`${
+      className={`font-["Patrick_Hand"] text-[14px] ${
         smallScreenShift && pageNum && +pageNum - leftPage === 1
           ? 'ml-[-234px]'
           : ''
-      } flex w-[588px] m-[60px]`}>
+      } flex w-[588px] mt-[60px] ${width < 660 ? 'ml-[60px]' : 'mx-auto'}`}>
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
         style={{ backgroundColor: style }}>
@@ -100,7 +102,6 @@ export function Cookbook() {
             pageData={pages[leftPage]}
             pages={pages}
             setPages={setPages}
-            cookbookId={cookbookId}
           />
         )}
       </div>
@@ -115,7 +116,6 @@ export function Cookbook() {
             pageData={pages[leftPage + 1]}
             pages={pages}
             setPages={setPages}
-            cookbookId={cookbookId}
           />
         )}
       </div>

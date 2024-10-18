@@ -1,10 +1,11 @@
-import { useState, useRef, Fragment } from 'react';
+import { useState, useRef, Fragment, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { getRecipeForm, deleteRecipe } from '../lib/page-scaffolding';
 import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
 import { DeleteConfirm } from './DeleteConfirm';
+import { CookbookContext } from './CookbookContext';
 
 type tocIndividualPageProps = IndividualPageProps & {
   onPageTurn: (num) => void;
@@ -24,7 +25,8 @@ export function ToC({
   onPageTurn,
 }: tocIndividualPageProps) {
   let keyCount = -1;
-  const { pageNum, cookbookId } = useParams();
+  const { pageNum } = useParams();
+  const { cookbookId } = useContext(CookbookContext);
   const currentPage = pages.findIndex((e) => e === pageData);
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [entryToMove, setEntryToMove] = useState<HTMLElement>();
@@ -126,7 +128,7 @@ export function ToC({
   return (
     <>
       <div
-        className="text-xs px-[30px]"
+        className="px-[30px]"
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
         ref={tocParentDiv}>
@@ -136,7 +138,7 @@ export function ToC({
             case 'title':
               return (
                 <h1
-                  className="text-center text-base"
+                  className='text-center text-[18px] font-["Shantell_Sans"] font-semibold'
                   key={`page:${currentPage},key:${keyCount}`}>
                   Table of Contents
                 </h1>
