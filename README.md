@@ -1,6 +1,6 @@
 # MyCookbook
 
-A full-stack TypeScript solo project.
+A full stack web application for cooks who want to save, organize, and access their recipes online. Allows users to create an account, perform CRUD operations on new cookbooks, and perform CRUD operations on new recieps within those cookbooks.
 
 ## Built With
 
