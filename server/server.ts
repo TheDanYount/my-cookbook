@@ -48,7 +48,7 @@ app.post(
       const photoUrl = `/images/recipe-images/${req?.file?.filename}`;
       let sql;
       let params;
-      if (newPhotoUrl === true) {
+      if (newPhotoUrl === 'new') {
         sql = `
     insert into "users" ( "photoUrl", "username", "password", "email", "firstName", "lastName", "style", )
     values ($1, $2, $3, $4, $5, $6, $7)
@@ -63,29 +63,13 @@ app.post(
           lastName,
           style,
         ];
-      } else if (newPhotoUrl === false) {
+      } else {
         sql = `
     insert into "users" ( "username", "password", "email", "firstName", "lastName", "style", )
     values ($1, $2, $3, $4, $5, $6)
     returning *;
     `;
         params = [username, hashedPassword, email, firstName, lastName, style];
-        // For newPhotoUrl === undefined, for the new value of no image
-      } else {
-        sql = `
-    insert into "users" ( "photoUrl", "username", "password", "email", "firstName", "lastName", "style", )
-    values ($1, $2, $3, $4, $5, $6, $7)
-    returning "userId", "username", "createdAt";
-    `;
-        params = [
-          '',
-          username,
-          hashedPassword,
-          email,
-          firstName,
-          lastName,
-          style,
-        ];
       }
       const result = await db.query(sql, params);
       if (!result.rows[0]) throw new ClientError(404, `Sign-up failed`);

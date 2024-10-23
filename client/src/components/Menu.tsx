@@ -4,13 +4,18 @@ import { FaBars } from 'react-icons/fa6';
 import { useWindowDimensions } from '../lib/window-dimensions';
 import { CookbookContext } from './CookbookContext';
 import { CookbookForm } from './CookbookForm';
+import { UserContext } from './UserContext';
+import { SignUpForm } from './SignUpForm';
+import { HomePage } from './HomePage';
+import { SignInForm } from './SignInForm';
 
 export function Menu() {
   const { width } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
-  const [isNewOpen, setIsNewOpen] = useState(false);
+  const [isCookbookFormOpen, setIsCookbookFormOpen] = useState(false);
+  const [isSignUpFormOpen, setIsSignUpFormOpen] = useState(false);
   const { cookbookId } = useContext(CookbookContext);
-  //const userId = 1; //Placeholder for development
+  const { userId } = useContext(UserContext);
   useEffect(() => {
     if (cookbookId === undefined) setIsOpen(true);
   }, [cookbookId]);
@@ -28,39 +33,29 @@ export function Menu() {
             onClick={() => setIsOpen(!isOpen)}>
             <FaBars className="w-[32px] h-[32px] mx-auto" />
           </button>
-          {isOpen && (
+          {isOpen && !isSignUpFormOpen && (
             <>
               <h1
-                className={`font-["Permanent_Marker"] ${
+                className={`font-["Permanent_Marker"] inline-block mx-auto wrap ${
                   width < 660 ? 'text-[30px]' : 'text-[45px]'
-                } shadow-[0_2px_white]`}>
-                MyCookbook
+                } text-center shadow-[0_2px_white] basis-[204px]`}>
+                {userId ? 'MyCookBook' : 'Welcome to MyCookbook!'}
               </h1>
               <div className="placeholder w-[50px] h-[50px]"></div>
             </>
           )}
         </div>
         {isOpen &&
-          (!isNewOpen ? (
-            <div className="flex flex-col items-center">
-              <h2 className="mt-[40px] text-[28px] font-semibold underline">
-                Cookbooks
-              </h2>
-              <div className="flex mt-[20px] gap-[20px]">
-                <button
-                  className="w-[150px] h-[210px] border-white border-2 rounded-[6px] hover:scale-105 children-hover-sm"
-                  onClick={() => setIsNewOpen(true)}>
-                  <div className="flex flex-col justify-center items-center h-full">
-                    <p className='font-["Patrick_Hand"] text-[50px]'>+</p>
-                    <p className='font-["Patrick_Hand"] w-4/5'>
-                      Click to create your first cookbook!
-                    </p>
-                  </div>
-                </button>
-              </div>
-            </div>
+          (userId ? (
+            !isCookbookFormOpen ? (
+              <HomePage setIsCookbookFormOpen={setIsCookbookFormOpen} />
+            ) : (
+              <CookbookForm />
+            )
+          ) : !isSignUpFormOpen ? (
+            <SignInForm setIsSignUpFormOpen={setIsSignUpFormOpen} />
           ) : (
-            <CookbookForm />
+            <SignUpForm />
           ))}
       </div>
       <Outlet />
