@@ -1,13 +1,61 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { FaTrash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from './UserContext';
 
 export function SignUpForm() {
+  const navigate = useNavigate();
+  const { setId } = useContext(UserContext);
   const [page, setPage] = useState(0);
-  const [imgUrl, setImgUrl] = useState<string>();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [imgUrl, setImgUrl] = useState('');
+  const [imgFile, setImgFile] = useState();
   const [checkedBg, setCheckedBg] = useState('#C45056');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
+  const [email, setEmail] = useState('');
+
   async function imgPreview(file) {
-    if (file) setImgUrl(URL.createObjectURL(file));
+    if (file) {
+      setImgUrl(URL.createObjectURL(file));
+      setImgFile(file);
+    }
   }
+
+  async function handlePseudoSubmit() {
+    if (!username) {
+      alert('A username is required!');
+      return;
+    }
+    if (!(password === password2)) {
+      alert('Password and re-entered password must match!');
+      return;
+    }
+    const data = new FormData();
+    data.append('newPhotoUrl', imgUrl ? 'new' : '');
+    data.append('username', username);
+    data.append('password', password);
+    data.append('email', email);
+    data.append('firstName', firstName);
+    data.append('lastName', lastName);
+    data.append('style', checkedBg);
+    if (imgFile) data.append('image', imgFile as Blob);
+    try {
+      const result = await fetch('/api/auth/sign-up', {
+        method: 'POST',
+        body: data,
+      });
+      const formattedResult = await result.json();
+      if (!result.ok) throw new Error(formattedResult.error);
+      setId(formattedResult.userId);
+      navigate('/');
+    } catch (err) {
+      alert(err);
+    }
+  }
+
   return (
     <>
       <h2 className="text-[28px] font-semibold text-center underline">
@@ -20,15 +68,19 @@ export function SignUpForm() {
           <label className="mt-[30px]">
             First:
             <input
-              name="first"
+              name="firstName"
+              value={firstName}
               className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+              onChange={(event) => setFirstName(event.currentTarget.value)}
             />
           </label>
           <label>
             Last:
             <input
-              name="last"
+              name="lastName"
+              value={lastName}
               className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+              onChange={(event) => setLastName(event.currentTarget.value)}
             />
           </label>
           <p className="text-center my-[30px]">Profile Pic:</p>
@@ -62,7 +114,8 @@ export function SignUpForm() {
               className={`trash w-[21px] ml-auto mt-[-24px] cursor-pointer
                 children-hover`}
               onClick={() => {
-                setImgUrl(undefined);
+                setImgUrl('');
+                setImgFile(undefined);
               }}>
               <FaTrash className="text-[24px]" />
             </div>
@@ -71,26 +124,27 @@ export function SignUpForm() {
           <div className="flex gap-[4px]">
             <button
               className={`w-[48px] h-[48px] border-white border-2 rounded-[6px]
-                font-bold hover:scale-110`}
+                font-bold hover:scale-110 outline-0`}
               onClick={() => setCheckedBg('#C45056')}>
               {checkedBg === '#C45056' && '\u2713'}
             </button>
             <button
               className="w-[48px] h-[48px] border-white border-2 rounded-[6px]
-              font-bold bg-[#4E88BF] hover:scale-110"
+              font-bold bg-[#4E88BF] hover:scale-110 outline-0"
               onClick={() => setCheckedBg('#4E88BF')}>
               {checkedBg === '#4E88BF' && '\u2713'}
             </button>
             <button
               className="w-[48px] h-[48px] border-white border-2 rounded-[6px]
-              font-bold bg-[#3E3F5B] hover:scale-110"
+              font-bold bg-[#3E3F5B] hover:scale-110 outline-0"
               onClick={() => setCheckedBg('#3E3F5B')}>
               {checkedBg === '#3E3F5B' && '\u2713'}
             </button>
             <label>
               <button
                 className="relative w-[48px] h-[48px] border-white border-2
-                rounded-[6px] hover:scale-110 leading-[16px] font-bold bg-"
+                rounded-[6px] hover:scale-110 leading-[16px] font-bold
+                outline-0"
                 style={{
                   backgroundColor: `${
                     checkedBg !== '#C45056' &&
@@ -139,33 +193,45 @@ export function SignUpForm() {
             Username:
             <input
               name="username"
+              value={username}
               className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+              onChange={(event) => setUsername(event.currentTarget.value)}
             />
           </label>
           <label>
             Password:
             <input
               name="password"
+              type="password"
+              value={password}
               className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+              onChange={(event) => setPassword(event.currentTarget.value)}
             />
           </label>
           <label>
             Re-enter Password:
             <input
               name="password2"
+              type="password"
+              value={password2}
               className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+              onChange={(event) => setPassword2(event.currentTarget.value)}
             />
           </label>
           <label>
             Email:
             <input
               name="email"
+              type="email"
+              value={email}
               className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+              onChange={(event) => setEmail(event.currentTarget.value)}
             />
           </label>
           <button
             className="mt-[30px] text-[30px] underline font-normal
-          hover:scale-110">
+          hover:scale-110"
+            onClick={handlePseudoSubmit}>
             Submit
           </button>
           <button

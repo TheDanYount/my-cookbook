@@ -50,9 +50,9 @@ app.post(
       let params;
       if (newPhotoUrl === 'new') {
         sql = `
-    insert into "users" ( "photoUrl", "username", "password", "email", "firstName", "lastName", "style", )
+    insert into "users" ( "photoUrl", "username", "password", "email", "firstName", "lastName", "style" )
     values ($1, $2, $3, $4, $5, $6, $7)
-    returning *;
+    returning "userId";
     `;
         params = [
           photoUrl,
@@ -65,9 +65,9 @@ app.post(
         ];
       } else {
         sql = `
-    insert into "users" ( "username", "password", "email", "firstName", "lastName", "style", )
+    insert into "users" ( "username", "password", "email", "firstName", "lastName", "style" )
     values ($1, $2, $3, $4, $5, $6)
-    returning *;
+    returning "userId";
     `;
         params = [username, hashedPassword, email, firstName, lastName, style];
       }

@@ -24,7 +24,6 @@ export function Menu({ isSignUpFormOpen }: Props) {
   useEffect(() => {
     if (cookbookId === undefined) setIsOpen(true);
   }, [cookbookId]);
-
   return (
     <>
       <div
