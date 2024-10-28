@@ -6,7 +6,7 @@ export type User = {
 };
 
 const defaultUser: User = {
-  userId: 1,
+  userId: undefined,
   setId: () => undefined,
 };
 
