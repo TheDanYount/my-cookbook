@@ -1,10 +1,6 @@
 import { Link } from 'react-router-dom';
 
-type Props = {
-  setIsSignUpFormOpen: (boolean) => void;
-};
-
-export function SignInForm({ setIsSignUpFormOpen }: Props) {
+export function SignInForm() {
   function handleLogin(event) {
     event.preventDefault();
   }
@@ -29,10 +25,7 @@ export function SignInForm({ setIsSignUpFormOpen }: Props) {
             className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
           />
         </label>
-        <Link
-          to={'/sign-up'}
-          className="text-[16px] underline  self-end"
-          onClick={() => setIsSignUpFormOpen(true)}>
+        <Link to={'/sign-up'} className="text-[16px] underline  self-end">
           need to sign up? Click here!
         </Link>
         <button className="underline text-[28px]" onClick={handleLogin}>

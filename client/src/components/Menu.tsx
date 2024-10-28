@@ -9,13 +9,18 @@ import { SignUpForm } from './SignUpForm';
 import { HomePage } from './HomePage';
 import { SignInForm } from './SignInForm';
 
-export function Menu() {
+type Props = {
+  isSignUpFormOpen?: boolean;
+};
+
+export function Menu({ isSignUpFormOpen }: Props) {
   const { width } = useWindowDimensions();
-  const [isOpen, setIsOpen] = useState(false);
   const [isCookbookFormOpen, setIsCookbookFormOpen] = useState(false);
-  const [isSignUpFormOpen, setIsSignUpFormOpen] = useState(false);
   const { cookbookId } = useContext(CookbookContext);
   const { userId } = useContext(UserContext);
+  const [isOpen, setIsOpen] = useState(
+    !userId && !isSignUpFormOpen ? false : true
+  );
   useEffect(() => {
     if (cookbookId === undefined) setIsOpen(true);
   }, [cookbookId]);
@@ -53,7 +58,7 @@ export function Menu() {
               <CookbookForm />
             )
           ) : !isSignUpFormOpen ? (
-            <SignInForm setIsSignUpFormOpen={setIsSignUpFormOpen} />
+            <SignInForm />
           ) : (
             <SignUpForm />
           ))}
