@@ -8,7 +8,9 @@ import {
   errorMiddleware,
   uploadsMiddlewareRecipes,
   uploadsMiddlewareUsers,
+  authMiddleware,
 } from './lib/index.js';
+import jwt from 'jsonwebtoken';
 
 const db = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -18,6 +20,7 @@ const db = new pg.Pool({
 });
 
 const hashKey = process.env.TOKEN_SECRET;
+if (!hashKey) throw new Error('TOKEN_SECRET not found in .env');
 
 const app = express();
 
@@ -80,10 +83,41 @@ app.post(
   }
 );
 
-app.post('/api/create-cookbook', async (req, res, next) => {
+app.post('/api/auth/sign-in', async (req, res, next) => {
   try {
-    const { userId, style, title } = req.body;
-    if (!userId) throw new ClientError(400, 'userId is required');
+    const { username, password } = req.body;
+    if (!username) throw new ClientError(401, 'Missing username!');
+    if (!password) throw new ClientError(401, 'Missing password!');
+    const sql = `
+    select *
+    from "users"
+    where "username" = $1
+    `;
+    const result = await db.query(sql, [username]);
+    const user = result.rows[0];
+    if (!user) throw new ClientError(401, 'User not found!');
+    if (!(await argon2.verify(user.password, password))) {
+      throw new ClientError(401, 'Invalid credentials');
+    }
+    const payload = {
+      userId: user.userId,
+      photoUrl: user.photoUrl,
+      username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      style: user.style,
+    };
+    const token = jwt.sign(payload, hashKey);
+    res.status(200).json({ user: payload, token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/create-cookbook', authMiddleware, async (req, res, next) => {
+  try {
+    const { style, title } = req.body;
     if (!style) throw new ClientError(400, 'style is required');
     if (!title) throw new ClientError(400, 'title is required');
     // Remove once form is updated
@@ -93,7 +127,12 @@ app.post('/api/create-cookbook', async (req, res, next) => {
     values ($1, $2, $3, $4)
     returning *;
     `;
-    const result = await db.query(sql, [userId, style, title, isPublic]);
+    const result = await db.query(sql, [
+      req.user?.userId,
+      style,
+      title,
+      isPublic,
+    ]);
     if (!result.rows[0]) throw new ClientError(404, `Cookbook add failed`);
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -103,6 +142,7 @@ app.post('/api/create-cookbook', async (req, res, next) => {
 
 app.post(
   '/api/create-recipe',
+  authMiddleware,
   uploadsMiddlewareRecipes.single('image'),
   async (req, res, next) => {
     try {

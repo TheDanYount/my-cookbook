@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { CookbookContext } from './components/CookbookContext';
-import { UserContext } from './components/UserContext';
+import { UserProvider } from './components/UserContext';
 import { Cookbook } from './components/Cookbook';
 import { NotFound } from './components/NotFound';
 import { Menu } from './components/Menu';
@@ -8,17 +8,12 @@ import { useState } from 'react';
 
 export default function App() {
   const [cookbookId, setCookbookId] = useState<number>(1);
-  const [userId, setUserId] = useState<number>();
   const cookbookContextValues = {
     cookbookId: cookbookId,
     setId: (num: number) => setCookbookId(num),
   };
-  const userContextValues = {
-    userId: userId,
-    setId: (num: number) => setUserId(num),
-  };
   return (
-    <UserContext.Provider value={userContextValues}>
+    <UserProvider>
       <CookbookContext.Provider value={cookbookContextValues}>
         <Routes>
           <Route path="/" element={<Menu />}>
@@ -32,6 +27,6 @@ export default function App() {
           <Route path="*" element={<NotFound />}></Route>
         </Routes>
       </CookbookContext.Provider>
-    </UserContext.Provider>
+    </UserProvider>
   );
 }

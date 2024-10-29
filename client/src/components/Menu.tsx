@@ -8,6 +8,7 @@ import { UserContext } from './UserContext';
 import { SignUpForm } from './SignUpForm';
 import { HomePage } from './HomePage';
 import { SignInForm } from './SignInForm';
+import { authKey } from './UserContext';
 
 type Props = {
   isSignUpFormOpen?: boolean;
@@ -17,10 +18,19 @@ export function Menu({ isSignUpFormOpen }: Props) {
   const { width } = useWindowDimensions();
   const [isCookbookFormOpen, setIsCookbookFormOpen] = useState(false);
   const { cookbookId } = useContext(CookbookContext);
-  const { userId } = useContext(UserContext);
+  const { user } = useContext(UserContext);
+  const { handleSignIn } = useContext(UserContext);
   const [isOpen, setIsOpen] = useState(
-    !userId && !isSignUpFormOpen ? false : true
+    !user && !isSignUpFormOpen ? false : true
   );
+  useEffect(() => {
+    const stringAuth = localStorage.getItem(authKey);
+    const auth = stringAuth ? JSON.parse(stringAuth) : undefined;
+    if (auth) {
+      handleSignIn(auth.user, auth.token);
+      setIsOpen(true);
+    }
+  }, [handleSignIn]);
   useEffect(() => {
     if (cookbookId === undefined) setIsOpen(true);
   }, [cookbookId]);
@@ -43,14 +53,14 @@ export function Menu({ isSignUpFormOpen }: Props) {
                 className={`font-["Permanent_Marker"] inline-block mx-auto wrap ${
                   width < 660 ? 'text-[30px]' : 'text-[45px]'
                 } text-center shadow-[0_2px_white] basis-[204px]`}>
-                {userId ? 'MyCookBook' : 'Welcome to MyCookbook!'}
+                {user ? 'MyCookBook' : `Welcome to MyCookbook!`}
               </h1>
               <div className="placeholder w-[50px] h-[50px]"></div>
             </>
           )}
         </div>
         {isOpen &&
-          (userId ? (
+          (user ? (
             !isCookbookFormOpen ? (
               <HomePage setIsCookbookFormOpen={setIsCookbookFormOpen} />
             ) : (
