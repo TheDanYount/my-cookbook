@@ -195,6 +195,7 @@ export function convertRecipeToForm(
   length: number
 ) {
   const pagesToConvert: PageData[] = [];
+  if (!(pages[pageNum].type === 'recipe')) return;
   for (let i = 0; i < length; i++) {
     pagesToConvert.push(pages[pageNum + i]);
   }

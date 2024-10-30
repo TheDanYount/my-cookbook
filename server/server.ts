@@ -310,28 +310,45 @@ app.put(
         throw new ClientError(400, 'failed to find cookbook');
       if (authResult.rows[0].userId !== req.user?.userId)
         throw new ClientError(401, 'user not authorized to update cookbook');
-      const potentialImageUrl = req.file
+      const imageUrl = req.file
         ? `/images/recipe-images/${req.file.filename}`
         : '';
-      const { title, ingredients, directions, notes, length, order, imageUrl } =
-        req.body;
-      const trueUrl = potentialImageUrl || imageUrl;
+      const {
+        title,
+        ingredients,
+        directions,
+        notes,
+        length,
+        order,
+        imageState,
+      } = req.body;
       // Remove once form is updated
       const isFavorite = false;
       // Remove once form is updated
       const isPublic = false;
-      const sql = `
+      let sql;
+      if (imageState) {
+        sql = `
     update "recipes"
     set "title" = $3, "imageUrl" = $4, "isFavorite" = $5, "ingredients" = $6,
     "directions" = $7, "notes" = $8, "order" = $9, "length" = $10, "isPublic" = $11
     where ("cookbookId" = $1 AND "recipeId" = $2)
     returning *;
     `;
+      } else {
+        sql = `
+    update "recipes"
+    set "title" = $3, "isFavorite" = $5, "ingredients" = $6,
+    "directions" = $7, "notes" = $8, "order" = $9, "length" = $10, "isPublic" = $11
+    where ("cookbookId" = $1 AND "recipeId" = $2)
+    returning *;
+    `;
+      }
       const result = await db.query(sql, [
         cookbookId,
         recipeId,
         title,
-        trueUrl,
+        imageUrl,
         isFavorite,
         ingredients,
         directions,

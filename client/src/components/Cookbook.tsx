@@ -13,8 +13,9 @@ export type PageData = {
   data: {
     type: string;
     text?: string;
-    file?: unknown;
+    file?: undefined | Blob;
     fileUrl?: string;
+    fileChanged?: boolean;
     pageNum?: number;
     length?: number;
     id?: number;

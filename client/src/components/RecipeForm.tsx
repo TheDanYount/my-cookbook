@@ -4,6 +4,7 @@ import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
 import { addToToc, getRecipeById } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
+import { FaTrash } from 'react-icons/fa';
 import { authKey } from './UserContext';
 
 export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
@@ -20,15 +21,17 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   }, [imgStore?.fileUrl]);
 
   async function imgPreview(file, data) {
-    /*
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (e) => {
-      console.log(e.target?.result);
-      console.log(data);*/
-    setImgUrl(URL.createObjectURL(file));
+    data.fileChanged = true;
+    if (!file) {
+      setImgUrl(undefined);
+      data.file = undefined;
+      data.fileUrl = undefined;
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setImgUrl(url);
     data.file = file;
-    //if (imgStore) imgStore.fileUrl = undefined;
+    data.fileUrl = url;
   }
 
   async function handlePsuedoSubmit() {
@@ -56,7 +59,7 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
     const notes = extractText(formPages, 'notes'); // An array
     data.append('notes', JSON.stringify(notes));
     data.append('length', String(endOfForm + 1 - startOfForm));
-    if (imgStore?.fileUrl) data.append('imageUrl', imgStore?.fileUrl);
+    if (imgStore?.fileChanged) data.append('imageState', 'new');
     if (formPages[0].data[0].id) {
       data.append(
         'order',
@@ -151,10 +154,10 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
           case 'img-and-ingredients':
             return (
               <div
-                className="flex my-[-4px]"
+                className="relative flex my-[-4px]"
                 key={`page:${currentPage},key:${keyCount}`}>
                 <label
-                  className={`w-[120px] h-[120px] my-1 ${
+                  className={`basis-[120px] h-[120px] my-1 ${
                     imgUrl ? 'bg-[#ffffff00]' : 'bg-[#ffffff88]'
                   } text-xs text-center text-[#9CA3AF]`}>
                   {imgUrl ? (
@@ -181,10 +184,22 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                       }
                     }}></input>
                 </label>
+                {imgUrl && (
+                  <div
+                    className={`absolute top-[84px] left-[80px] w-[40px] h-[40px]
+                  bg-gradient-to-br from-[#ffffff00] from-50% to-[#88888899] to-50%`}>
+                    <div
+                      className="w-[16px] h-[16px] m-[20px] pl-[1px] text-base
+                  hover:scale-110 cursor-pointer"
+                      onClick={() => imgPreview(undefined, e)}>
+                      <FaTrash />
+                    </div>
+                  </div>
+                )}
                 <textarea
                   name="ingredients"
                   placeholder="[Input ingredients here]"
-                  className={`block basis-[151px] px-[2px] self-stretch resize-none my-1 bg-[#ffffff88]`}
+                  className={`block basis-[141px] px-[2px] self-stretch resize-none my-1 bg-[#ffffff88]`}
                   style={{ fontSize: '12px' }}
                   onChange={(event) => {
                     setRerender({});
