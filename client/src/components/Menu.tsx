@@ -27,7 +27,6 @@ export function Menu({ mode }: Props) {
       handleSignIn(auth.user, auth.token);
     }
   }, [handleSignIn]);
-  console.log(!mode);
   return (
     <>
       <div
