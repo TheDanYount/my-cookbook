@@ -67,10 +67,15 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
         )
       );
       try {
+        const auth = localStorage.getItem(authKey);
+        if (!auth) throw new Error('not properly logged in');
         const result = await fetch(
           `/api/update-recipe/${cookbookId}/${formPages[0].data[0].id}`,
           {
             method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${JSON.parse(auth).token}`,
+            },
             body: data,
           }
         );

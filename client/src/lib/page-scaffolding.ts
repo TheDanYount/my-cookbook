@@ -1,9 +1,16 @@
 import { PageData } from '../components/Cookbook';
+import { authKey } from '../components/UserContext';
 
 export async function getRecipes(cookbookId) {
   try {
+    const auth = localStorage.getItem(authKey);
+    if (!auth) throw new Error('not properly logged in');
     const recipePageDataArray: PageData[] = [];
-    const result = await fetch(`/api/read-recipes/${cookbookId}`);
+    const result = await fetch(`/api/read-recipes/${cookbookId}`, {
+      headers: {
+        Authorization: `Bearer ${JSON.parse(auth).token}`,
+      },
+    });
     const formattedResult = await result.json();
     if (!result.ok) throw new Error(formattedResult.error);
     for (const recipe of formattedResult) {
@@ -61,9 +68,16 @@ export async function getRecipes(cookbookId) {
 
 export async function getRecipeById(cookbookId, recipeId) {
   try {
+    const auth = localStorage.getItem(authKey);
+    if (!auth) throw new Error('not properly logged in');
     const recipePageDataArray: PageData[] = [];
     const result = await fetch(
-      `/api/read-recipe-by-id/${cookbookId}/${recipeId}`
+      `/api/read-recipe-by-id/${cookbookId}/${recipeId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${JSON.parse(auth).token}`,
+        },
+      }
     );
     const formattedResult = await result.json();
     if (!result.ok) throw new Error(formattedResult.error);
@@ -200,8 +214,11 @@ export function convertRecipeToForm(
 
 export async function deleteRecipe(cookbookId, recipeId) {
   try {
+    const auth = localStorage.getItem(authKey);
+    if (!auth) throw new Error('not properly logged in');
     const result = await fetch(`/api/delete-recipe/${cookbookId}/${recipeId}`, {
       method: 'DELETE',
+      headers: { Authorization: `Bearer ${JSON.parse(auth).token}` },
     });
     if (!result.ok) throw new Error('Delete failed!');
   } catch (err) {
