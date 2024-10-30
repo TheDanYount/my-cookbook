@@ -54,7 +54,8 @@ export function Menu({ mode }: Props) {
         </div>
         {isOpen && (
           <>
-            {!mode && (user ? <HomePage /> : <SignInForm />)}
+            {!mode &&
+              (user ? <HomePage setIsOpen={setIsOpen} /> : <SignInForm />)}
             {mode === 'sign-up' && <SignUpForm />}
             {mode === 'create-cookbook' && <CookbookForm />}
           </>
