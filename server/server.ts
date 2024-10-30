@@ -149,13 +149,12 @@ app.post(
       const imageUrl = req.file
         ? `/images/recipe-images/${req.file.filename}`
         : '';
+      const cookbookId = Number(req.body.cookbookId);
       const { title, ingredients, directions, notes, length, order } = req.body;
       // Remove once form is updated
       const isFavorite = false;
       // Remove once form is updated
       const isPublic = false;
-      // Remove once form is updated
-      const cookbookId = 1;
       if (!cookbookId)
         throw new ClientError(400, 'cookbookId for recipe not recognized');
       if (!title) throw new ClientError(400, 'title is required');
@@ -169,6 +168,16 @@ app.post(
           400,
           'client failed to automatically add length attribute'
         );
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (!(authResult.rows[0].userId === req.user?.userId))
+        throw new ClientError(400, 'user not authorized to add to cookbook');
       const sql = `
     insert into "recipes" ("cookbookId", "title", "imageUrl", "isFavorite", "ingredients", "directions", "notes", "order", "length", "isPublic")
     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)

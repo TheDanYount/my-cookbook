@@ -1,25 +1,28 @@
 import { useContext, useState } from 'react';
-import { UserContext } from './UserContext';
+import { authKey, UserContext } from './UserContext';
 import { CookbookContext } from './CookbookContext';
 
 export function CookbookForm() {
   const [title, setTitle] = useState<string>('');
-  const [titleColor, setTitleColor] = useState('#fff');
+  const [titleColor, setTitleColor] = useState('#ffffff');
   const [bgColor, setBgColor] = useState('#4C301E');
-  const { userId } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const { setId } = useContext(CookbookContext);
 
   async function handlePsuedoSubmit() {
     const data = {
-      userId: userId,
+      userId: user?.userId,
       style: `titleColor:${titleColor}, bgColor:${bgColor}`,
       title: title,
     };
     try {
+      const auth = localStorage.getItem(authKey);
+      if (!auth) throw new Error('not properly logged in');
       const result = await fetch('/api/create-cookbook', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${JSON.parse(auth).token}`,
         },
         body: JSON.stringify(data),
       });

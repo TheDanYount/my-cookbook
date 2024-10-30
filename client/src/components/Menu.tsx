@@ -21,19 +21,16 @@ export function Menu({ isSignUpFormOpen }: Props) {
   const { user } = useContext(UserContext);
   const { handleSignIn } = useContext(UserContext);
   const [isOpen, setIsOpen] = useState(
-    !user && !isSignUpFormOpen ? false : true
+    !user && !isSignUpFormOpen && !cookbookId ? false : true
   );
   useEffect(() => {
     const stringAuth = localStorage.getItem(authKey);
     const auth = stringAuth ? JSON.parse(stringAuth) : undefined;
     if (auth) {
       handleSignIn(auth.user, auth.token);
-      setIsOpen(true);
     }
-  }, [handleSignIn]);
-  useEffect(() => {
-    if (cookbookId === undefined) setIsOpen(true);
-  }, [cookbookId]);
+    setIsOpen(!isSignUpFormOpen && cookbookId ? false : true);
+  }, [handleSignIn, cookbookId, isSignUpFormOpen]);
   return (
     <>
       <div

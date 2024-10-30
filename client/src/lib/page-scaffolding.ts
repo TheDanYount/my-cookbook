@@ -149,7 +149,7 @@ export function addToToc(pages: PageData[], recipe) {
       const prevPageNum = pages[i]?.data[pages[i].data.length - 2]?.pageNum;
       const prevPageLength = pages[i]?.data[pages[i].data.length - 2]?.length;
       const newPageNum =
-        prevPageNum && prevPageLength ? prevPageNum + prevPageLength : 0;
+        prevPageNum && prevPageLength ? prevPageNum + prevPageLength : i + 1;
       pages[i].data.splice(-1, 0, {
         type: 'recipe',
         text: recipe.title,
