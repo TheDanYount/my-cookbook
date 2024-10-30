@@ -21,9 +21,10 @@ export default function App() {
               path="/cookbook/:cookbookId/page/:pageNum"
               element={<Cookbook />}></Route>
           </Route>
+          <Route path="/sign-up" element={<Menu mode="sign-up" />}></Route>
           <Route
-            path="/sign-up"
-            element={<Menu isSignUpFormOpen={true} />}></Route>
+            path="/create-cookbook"
+            element={<Menu mode="create-cookbook" />}></Route>
           <Route path="*" element={<NotFound />}></Route>
         </Routes>
       </CookbookContext.Provider>
