@@ -8,7 +8,9 @@ import {
   errorMiddleware,
   uploadsMiddlewareRecipes,
   uploadsMiddlewareUsers,
+  authMiddleware,
 } from './lib/index.js';
+import jwt from 'jsonwebtoken';
 
 const db = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -18,6 +20,7 @@ const db = new pg.Pool({
 });
 
 const hashKey = process.env.TOKEN_SECRET;
+if (!hashKey) throw new Error('TOKEN_SECRET not found in .env');
 
 const app = express();
 
@@ -80,20 +83,57 @@ app.post(
   }
 );
 
-app.post('/api/create-cookbook', async (req, res, next) => {
+app.post('/api/auth/sign-in', async (req, res, next) => {
   try {
-    const { userId, style, title } = req.body;
-    if (!userId) throw new ClientError(400, 'userId is required');
+    const { username, password } = req.body;
+    if (!username) throw new ClientError(401, 'Missing username!');
+    if (!password) throw new ClientError(401, 'Missing password!');
+    const sql = `
+    select *
+    from "users"
+    where "username" = $1
+    `;
+    const result = await db.query(sql, [username]);
+    const user = result.rows[0];
+    if (!user) throw new ClientError(401, 'User not found!');
+    if (!(await argon2.verify(user.password, password))) {
+      throw new ClientError(401, 'Invalid credentials');
+    }
+    const payload = {
+      userId: user.userId,
+      photoUrl: user.photoUrl,
+      username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      style: user.style,
+    };
+    const token = jwt.sign(payload, hashKey);
+    res.status(200).json({ user: payload, token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/api/create-cookbook', authMiddleware, async (req, res, next) => {
+  try {
+    const { style, title } = req.body;
     if (!style) throw new ClientError(400, 'style is required');
     if (!title) throw new ClientError(400, 'title is required');
     // Remove once form is updated
     const isPublic = false;
+    if (!req.user?.userId) throw new ClientError(401, 'user not found');
     const sql = `
     insert into "cookbooks" ("userId", "style", "title", "isPublic")
     values ($1, $2, $3, $4)
     returning *;
     `;
-    const result = await db.query(sql, [userId, style, title, isPublic]);
+    const result = await db.query(sql, [
+      req.user?.userId,
+      style,
+      title,
+      isPublic,
+    ]);
     if (!result.rows[0]) throw new ClientError(404, `Cookbook add failed`);
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -103,19 +143,19 @@ app.post('/api/create-cookbook', async (req, res, next) => {
 
 app.post(
   '/api/create-recipe',
+  authMiddleware,
   uploadsMiddlewareRecipes.single('image'),
   async (req, res, next) => {
     try {
       const imageUrl = req.file
         ? `/images/recipe-images/${req.file.filename}`
         : '';
+      const cookbookId = Number(req.body.cookbookId);
       const { title, ingredients, directions, notes, length, order } = req.body;
       // Remove once form is updated
       const isFavorite = false;
       // Remove once form is updated
       const isPublic = false;
-      // Remove once form is updated
-      const cookbookId = 1;
       if (!cookbookId)
         throw new ClientError(400, 'cookbookId for recipe not recognized');
       if (!title) throw new ClientError(400, 'title is required');
@@ -129,6 +169,16 @@ app.post(
           400,
           'client failed to automatically add length attribute'
         );
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (authResult.rows[0].userId !== req.user?.userId)
+        throw new ClientError(401, 'user not authorized to add to cookbook');
       const sql = `
     insert into "recipes" ("cookbookId", "title", "imageUrl", "isFavorite", "ingredients", "directions", "notes", "order", "length", "isPublic")
     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -153,11 +203,11 @@ app.post(
   }
 );
 
-app.get('/api/read-cookbooks/:userId', async (req, res, next) => {
+app.get('/api/read-cookbooks', authMiddleware, async (req, res, next) => {
   try {
-    const { userId } = req.params;
-    if (!Number.isInteger(+userId))
-      throw new ClientError(400, 'userId must be an integer');
+    const userId = req.user?.userId;
+    if (!req.user?.userId)
+      throw new ClientError(401, 'user not properly logged in');
     const sql = `
     select *
     from "cookbooks"
@@ -172,34 +222,59 @@ app.get('/api/read-cookbooks/:userId', async (req, res, next) => {
   }
 });
 
-app.get('/api/read-recipes/:cookbookId', async (req, res, next) => {
-  try {
-    const { cookbookId } = req.params;
-    if (!Number.isInteger(+cookbookId))
-      throw new ClientError(400, 'cookbookId must be an integer');
-    const sql = `
+app.get(
+  '/api/read-recipes/:cookbookId',
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const { cookbookId } = req.params;
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(400, 'cookbookId must be an integer');
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (authResult.rows[0].userId !== req.user?.userId)
+        throw new ClientError(401, 'user not authorized to access cookbook');
+      const sql = `
     select *
     from "recipes"
     where "cookbookId" = $1
     order by "order";
     `;
-    const result = await db.query(sql, [cookbookId]);
-    // No error for if !result.rows[0] because there may be no recipes
-    res.status(200).json(result.rows);
-  } catch (err) {
-    next(err);
+      const result = await db.query(sql, [cookbookId]);
+      // No error for if !result.rows[0] because there may be no recipes
+      res.status(200).json(result.rows);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
 app.get(
   '/api/read-recipe-by-id/:cookbookId/:recipeId',
+  authMiddleware,
   async (req, res, next) => {
     try {
       const { cookbookId, recipeId } = req.params;
       if (!Number.isInteger(+cookbookId))
         throw new ClientError(400, 'cookbookId must be an integer');
       if (!Number.isInteger(+recipeId))
-        throw new ClientError(400, `order must be an integer`);
+        throw new ClientError(400, `recipeId must be an integer`);
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (authResult.rows[0].userId !== req.user?.userId)
+        throw new ClientError(401, 'user not authorized to add to cookbook');
       const sql = `
     select *
     from "recipes"
@@ -216,12 +291,25 @@ app.get(
 
 app.put(
   '/api/update-recipe/:cookbookId/:recipeId',
+  authMiddleware,
   uploadsMiddlewareRecipes.single('image'),
   async (req, res, next) => {
     try {
       const { cookbookId, recipeId } = req.params;
-      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
-      if (!recipeId) throw new ClientError(400, 'recipeId is required');
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(400, 'cookbookId must be an integer');
+      if (!Number.isInteger(+recipeId))
+        throw new ClientError(400, `recipeId must be an integer`);
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (authResult.rows[0].userId !== req.user?.userId)
+        throw new ClientError(401, 'user not authorized to update cookbook');
       const potentialImageUrl = req.file
         ? `/images/recipe-images/${req.file.filename}`
         : '';
@@ -262,13 +350,27 @@ app.put(
 
 app.put(
   '/api/re-order-recipes/:cookbookId/:recipeId',
+  authMiddleware,
   async (req, res, next) => {
     try {
       const { cookbookId, recipeId } = req.params;
       const { order } = req.body;
-      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
-      if (!recipeId) throw new ClientError(400, 'recipeId is required');
-      if (!order) throw new ClientError(400, 'order is required');
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(400, 'cookbookId must be an integer');
+      if (!Number.isInteger(+recipeId))
+        throw new ClientError(400, `recipeId must be an integer`);
+      if (!Number.isInteger(+order))
+        throw new ClientError(400, 'order must be an integer');
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (authResult.rows[0].userId !== req.user?.userId)
+        throw new ClientError(401, 'user not authorized to update cookbook');
       const sql = `
     update "recipes"
     set "order" = $3
@@ -286,11 +388,27 @@ app.put(
 
 app.delete(
   '/api/delete-recipe/:cookbookId/:recipeId',
+  authMiddleware,
   async (req, res, next) => {
     try {
       const { cookbookId, recipeId } = req.params;
-      if (!cookbookId) throw new ClientError(400, 'cookbookId is required');
-      if (!recipeId) throw new ClientError(400, 'recipeId is required');
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(400, 'cookbookId must be an integer');
+      if (!Number.isInteger(+recipeId))
+        throw new ClientError(400, `recipeId must be an integer`);
+      const authSql = `
+      select "userId"
+      from "cookbooks"
+      where "cookbookId" = $1
+      `;
+      const authResult = await db.query(authSql, [cookbookId]);
+      if (!authResult.rows[0])
+        throw new ClientError(400, 'failed to find cookbook');
+      if (authResult.rows[0].userId !== req.user?.userId)
+        throw new ClientError(
+          401,
+          'user not authorized to delete from cookbook'
+        );
       const sql = `
     delete
     from "recipes"

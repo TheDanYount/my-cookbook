@@ -6,6 +6,7 @@ import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
 import { DeleteConfirm } from './DeleteConfirm';
 import { CookbookContext } from './CookbookContext';
+import { authKey } from './UserContext';
 
 type tocIndividualPageProps = IndividualPageProps & {
   onPageTurn: (num) => void;
@@ -202,11 +203,14 @@ function reOrderTocEntries(data) {
 async function reOrderRecipes(data, cookbookId) {
   for (let i = 0; i < data.length; i++) {
     try {
+      const auth = localStorage.getItem(authKey);
+      if (!auth) throw new Error('not properly logged in');
       const result = await fetch(
         `/api/re-order-recipes/${cookbookId}/${data[i].id}`,
         {
           method: 'PUT',
           headers: {
+            Authorization: `Bearer ${JSON.parse(auth).token}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ order: i + 1 }),

@@ -4,6 +4,7 @@ import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
 import { addToToc, getRecipeById } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
+import { authKey } from './UserContext';
 
 export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   const { cookbookId } = useContext(CookbookContext);
@@ -46,6 +47,7 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
     const image = extractImage(formPages) as Blob;
     data.append('image', image);
     const title = formPages[0].data[0].text as string;
+    data.append('cookbookId', String(cookbookId));
     data.append('title', title);
     const ingredients = extractText(formPages, 'img-and-ingredients'); // An array
     data.append('ingredients', JSON.stringify(ingredients));
@@ -65,10 +67,15 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
         )
       );
       try {
+        const auth = localStorage.getItem(authKey);
+        if (!auth) throw new Error('not properly logged in');
         const result = await fetch(
           `/api/update-recipe/${cookbookId}/${formPages[0].data[0].id}`,
           {
             method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${JSON.parse(auth).token}`,
+            },
             body: data,
           }
         );
@@ -93,8 +100,13 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
     } else {
       data.append('order', String(pages[2].data.length - 1));
       try {
+        const auth = localStorage.getItem(authKey);
+        if (!auth) throw new Error('not properly logged in');
         const result = await fetch('/api/create-recipe', {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${JSON.parse(auth).token}`,
+          },
           body: data,
         });
         const formattedResult = await result.json();
