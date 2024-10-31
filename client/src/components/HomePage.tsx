@@ -1,9 +1,10 @@
-import { useNavigate } from 'react-router-dom';
 import { authKey } from './UserContext';
 import { useEffect, useState } from 'react';
 import { CarouselButton } from './CarouselButton';
+import { useWindowDimensions } from '../lib/window-dimensions';
+import { CarouselContents } from './CarouselContents';
 
-type Cookbook = {
+export type Cookbook = {
   cookbookId: number;
   isPublic: boolean;
   style: string;
@@ -16,13 +17,13 @@ type Props = {
 };
 
 export function HomePage({ setIsOpen }: Props) {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [cookbooks, setCookbooks] = useState<Cookbook[]>([]);
   const [carouselIndex, setCarouselIndex] = useState<number>(0);
   const [debounce, setDebounce] = useState<boolean>();
   const [carouselTeleports, setCarouselTeleports] = useState<boolean>();
-
+  const { width } = useWindowDimensions();
+  const visibleCookbooks = width < 660 ? 1 : width < 946 ? 2 : 3;
   useEffect(() => {
     async function getCookbooks() {
       try {
@@ -70,111 +71,46 @@ export function HomePage({ setIsOpen }: Props) {
       {isLoading ? (
         <p>Loading...</p>
       ) : (
-        <div className="flex justify-evenly items-center mt-[20px] w-full">
-          <CarouselButton
-            isFlipped
-            onButtonClick={() => handleCarouselTurn(-1)}
-          />
-          <div className="basis-[70%] p-[6px] overflow-hidden">
+        <div className="flex justify-center items-center mt-[20px] w-full">
+          {cookbooks.length >= visibleCookbooks && (
+            <CarouselButton
+              isFlipped
+              onButtonClick={() => handleCarouselTurn(-1)}
+            />
+          )}
+          <div
+            className={`${
+              visibleCookbooks === 1
+                ? 'basis-[218px]'
+                : visibleCookbooks === 2
+                ? 'basis-[378px]'
+                : 'basis-[538px]'
+            } p-[6px] overflow-hidden`}>
             <div
-              className={`flex gap-[20px] ${
+              className={`flex gap-[10px] ${
                 carouselTeleports ||
                 'transition-[margin-left] duration-[250ms] ease-in-out'
               }`}
-              style={{ marginLeft: `${carouselIndex * -170}px` }}>
-              {cookbooks?.map((book) => {
-                const titleColorIndex = book.style.indexOf('titleColor');
-                const titleColor = book.style.slice(
-                  titleColorIndex + 11,
-                  titleColorIndex + 18
-                );
-                const bgColorIndex = book.style.indexOf('bgColor');
-                const bgColor = book.style.slice(
-                  bgColorIndex + 8,
-                  bgColorIndex + 15
-                );
-                return (
-                  <button
-                    className="shrink-0 w-[150px] h-[210px] border-white border-2
-                rounded-[6px] hover:scale-105"
-                    onClick={() => {
-                      setIsOpen(false);
-                      navigate(`/cookbook/${book.cookbookId}/page/1`);
-                    }}
-                    key={`cookbook${book.cookbookId}`}>
-                    <div
-                      className="flex flex-col h-[206px] overflow-hidden
-                break-words text-[26px] rounded-[6px]"
-                      style={{ backgroundColor: bgColor }}>
-                      <div className="basis-[40px]"></div>
-                      <p className="text-pretty" style={{ color: titleColor }}>
-                        {book.title}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-              <button
-                className="shrink-0 w-[150px] h-[210px] border-white border-2 rounded-[6px]
-            hover:scale-105"
-                onClick={() => navigate('/create-cookbook')}>
-                <div className="flex flex-col justify-center items-center h-full">
-                  <p className='font-["Patrick_Hand"] text-[50px]'>+</p>
-                  <p className='font-["Patrick_Hand"] w-4/5'>
-                    {!cookbooks
-                      ? 'Click to create your first cookbook!'
-                      : 'Click to create a new cookbook!'}
-                  </p>
-                </div>
-              </button>
-              {cookbooks?.map((book) => {
-                const titleColorIndex = book.style.indexOf('titleColor');
-                const titleColor = book.style.slice(
-                  titleColorIndex + 11,
-                  titleColorIndex + 18
-                );
-                const bgColorIndex = book.style.indexOf('bgColor');
-                const bgColor = book.style.slice(
-                  bgColorIndex + 8,
-                  bgColorIndex + 15
-                );
-                return (
-                  <button
-                    className="shrink-0 w-[150px] h-[210px] border-white border-2
-                rounded-[6px] hover:scale-105"
-                    onClick={() => {
-                      setIsOpen(false);
-                      navigate(`/cookbook/${book.cookbookId}/page/1`);
-                    }}
-                    key={`cookbook${book.cookbookId}v2`}>
-                    <div
-                      className="flex flex-col h-[206px] overflow-hidden
-                break-words text-[26px] rounded-[6px]"
-                      style={{ backgroundColor: bgColor }}>
-                      <div className="basis-[40px]"></div>
-                      <p className="text-pretty" style={{ color: titleColor }}>
-                        {book.title}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-              <button
-                className="shrink-0 w-[150px] h-[210px] border-white border-2 rounded-[6px]
-            hover:scale-105"
-                onClick={() => navigate('/create-cookbook')}>
-                <div className="flex flex-col justify-center items-center h-full">
-                  <p className='font-["Patrick_Hand"] text-[50px]'>+</p>
-                  <p className='font-["Patrick_Hand"] w-4/5'>
-                    {!cookbooks
-                      ? 'Click to create your first cookbook!'
-                      : 'Click to create a new cookbook!'}
-                  </p>
-                </div>
-              </button>
+              style={{
+                marginLeft: `${
+                  28 +
+                  (cookbooks.length >= visibleCookbooks
+                    ? (carouselIndex + 1 + cookbooks.length) * -160
+                    : 0)
+                }px`,
+              }}>
+              {cookbooks.length >= visibleCookbooks && (
+                <CarouselContents setIsOpen={setIsOpen} cookbooks={cookbooks} />
+              )}
+              <CarouselContents setIsOpen={setIsOpen} cookbooks={cookbooks} />
+              {cookbooks.length >= visibleCookbooks && (
+                <CarouselContents setIsOpen={setIsOpen} cookbooks={cookbooks} />
+              )}
             </div>
           </div>
-          <CarouselButton onButtonClick={() => handleCarouselTurn(1)} />
+          {cookbooks.length >= visibleCookbooks && (
+            <CarouselButton onButtonClick={() => handleCarouselTurn(1)} />
+          )}
         </div>
       )}
     </div>
