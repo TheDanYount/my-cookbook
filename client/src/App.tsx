@@ -7,7 +7,7 @@ import { Menu } from './components/Menu';
 import { useState } from 'react';
 
 export default function App() {
-  const [cookbookId, setCookbookId] = useState<number>(1);
+  const [cookbookId, setCookbookId] = useState<number>();
   const cookbookContextValues = {
     cookbookId: cookbookId,
     setId: (num: number) => setCookbookId(num),

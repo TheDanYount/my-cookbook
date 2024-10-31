@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Cookbook } from './HomePage';
+import { CookbookContext } from './CookbookContext';
+import { useContext } from 'react';
 
 type Props = {
   setIsOpen: (boolean) => void;
@@ -8,6 +10,7 @@ type Props = {
 
 export function CarouselContents({ setIsOpen, cookbooks }: Props) {
   const navigate = useNavigate();
+  const { setId } = useContext(CookbookContext);
   return (
     <>
       {cookbooks?.map((book) => {
@@ -24,6 +27,7 @@ export function CarouselContents({ setIsOpen, cookbooks }: Props) {
                 rounded-[6px] hover:scale-105"
             onClick={() => {
               setIsOpen(false);
+              setId(book.cookbookId);
               navigate(`/cookbook/${book.cookbookId}/page/1`);
             }}
             key={`cookbook${book.cookbookId}`}>

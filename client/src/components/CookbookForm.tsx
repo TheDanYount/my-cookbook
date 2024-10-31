@@ -33,6 +33,7 @@ export function CookbookForm() {
       console.log(formattedResult.cookbookId);
       setId(formattedResult.cookbookId);
       alert('Cookbook added successfully!');
+      setId(formattedResult.cookbookId);
       navigate(`/cookbook/${formattedResult.cookbookId}/page/1`);
     } catch (err) {
       alert(err);
