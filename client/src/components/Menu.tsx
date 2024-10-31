@@ -11,26 +11,22 @@ import { SignInForm } from './SignInForm';
 import { authKey } from './UserContext';
 
 type Props = {
-  isSignUpFormOpen?: boolean;
+  mode?: string;
 };
 
-export function Menu({ isSignUpFormOpen }: Props) {
+export function Menu({ mode }: Props) {
   const { width } = useWindowDimensions();
-  const [isCookbookFormOpen, setIsCookbookFormOpen] = useState(false);
   const { cookbookId } = useContext(CookbookContext);
   const { user } = useContext(UserContext);
   const { handleSignIn } = useContext(UserContext);
-  const [isOpen, setIsOpen] = useState(
-    !user && !isSignUpFormOpen && !cookbookId ? false : true
-  );
+  const [isOpen, setIsOpen] = useState(mode && !cookbookId ? true : false);
   useEffect(() => {
     const stringAuth = localStorage.getItem(authKey);
     const auth = stringAuth ? JSON.parse(stringAuth) : undefined;
     if (auth) {
       handleSignIn(auth.user, auth.token);
     }
-    setIsOpen(!isSignUpFormOpen && cookbookId ? false : true);
-  }, [handleSignIn, cookbookId, isSignUpFormOpen]);
+  }, [handleSignIn]);
   return (
     <>
       <div
@@ -44,7 +40,7 @@ export function Menu({ isSignUpFormOpen }: Props) {
             onClick={() => setIsOpen(!isOpen)}>
             <FaBars className="w-[32px] h-[32px] mx-auto" />
           </button>
-          {isOpen && !isSignUpFormOpen && (
+          {isOpen && !mode && (
             <>
               <h1
                 className={`font-["Permanent_Marker"] inline-block mx-auto wrap ${
@@ -56,18 +52,14 @@ export function Menu({ isSignUpFormOpen }: Props) {
             </>
           )}
         </div>
-        {isOpen &&
-          (user ? (
-            !isCookbookFormOpen ? (
-              <HomePage setIsCookbookFormOpen={setIsCookbookFormOpen} />
-            ) : (
-              <CookbookForm />
-            )
-          ) : !isSignUpFormOpen ? (
-            <SignInForm />
-          ) : (
-            <SignUpForm />
-          ))}
+        {isOpen && (
+          <>
+            {!mode &&
+              (user ? <HomePage setIsOpen={setIsOpen} /> : <SignInForm />)}
+            {mode === 'sign-up' && <SignUpForm />}
+            {mode === 'create-cookbook' && <CookbookForm />}
+          </>
+        )}
       </div>
       <Outlet />
     </>

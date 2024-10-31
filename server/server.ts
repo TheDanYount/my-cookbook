@@ -212,7 +212,7 @@ app.get('/api/read-cookbooks', authMiddleware, async (req, res, next) => {
     select *
     from "cookbooks"
     where "userId" = $1
-    order by "cookbookId" desc;
+    order by "cookbookId";
     `;
     const result = await db.query(sql, [userId]);
     // No error for if !result.rows[0] because there may be no cookbooks

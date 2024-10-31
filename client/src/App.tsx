@@ -7,7 +7,7 @@ import { Menu } from './components/Menu';
 import { useState } from 'react';
 
 export default function App() {
-  const [cookbookId, setCookbookId] = useState<number>(1);
+  const [cookbookId, setCookbookId] = useState<number>();
   const cookbookContextValues = {
     cookbookId: cookbookId,
     setId: (num: number) => setCookbookId(num),
@@ -21,9 +21,10 @@ export default function App() {
               path="/cookbook/:cookbookId/page/:pageNum"
               element={<Cookbook />}></Route>
           </Route>
+          <Route path="/sign-up" element={<Menu mode="sign-up" />}></Route>
           <Route
-            path="/sign-up"
-            element={<Menu isSignUpFormOpen={true} />}></Route>
+            path="/create-cookbook"
+            element={<Menu mode="create-cookbook" />}></Route>
           <Route path="*" element={<NotFound />}></Route>
         </Routes>
       </CookbookContext.Provider>

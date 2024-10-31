@@ -44,7 +44,10 @@ export function Cookbook() {
     async function setup() {
       setIsLoading(true);
       try {
+        if (!cookbookId) return;
         const recipes = await getRecipes(cookbookId);
+        console.log(recipes);
+        console.log(recipes && 'hi');
         if (recipes) {
           setPages(() => {
             const toc = buildToc(recipes);
@@ -56,8 +59,8 @@ export function Cookbook() {
         alert(err);
       }
     }
-    if (isLoading === undefined) setup();
-  }, [cookbookId, isLoading]);
+    setup();
+  }, [cookbookId]);
 
   useEffect(() => {
     if (width < 660 && smallScreenShift === false) {
