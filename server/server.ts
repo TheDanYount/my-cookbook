@@ -221,7 +221,7 @@ app.get(
     `;
       const result = await db.query(sql, [userId, cookbookId]);
       if (!result.rows[0]) throw new ClientError(404, 'cookbook not found');
-      res.status(200).json(result.rows);
+      res.status(200).json(result.rows[0]);
     } catch (err) {
       next(err);
     }

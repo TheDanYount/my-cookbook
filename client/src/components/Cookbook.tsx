@@ -22,10 +22,7 @@ export type PageData = {
   }[];
 };
 
-const dummyPagesForDevelopment = [
-  { type: 'title', data: [] },
-  { type: 'title', data: [] },
-];
+const zerothPagePlaceholder = { type: '', data: [] };
 
 export function Cookbook() {
   const { cookbookId, pageNum } = useParams();
@@ -49,7 +46,11 @@ export function Cookbook() {
         if (recipes) {
           setPages(() => {
             const toc = buildToc(recipes);
-            return [...dummyPagesForDevelopment, toc, ...recipes];
+            const titlePage = {
+              type: 'title',
+              data: [{ type: 'title', text: cookbook?.title }],
+            };
+            return [zerothPagePlaceholder, titlePage, toc, ...recipes];
           });
           setIsLoading(false);
         }

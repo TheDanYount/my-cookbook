@@ -2,6 +2,7 @@ import { useWindowDimensions } from '../lib/window-dimensions';
 import { PageData } from './Cookbook';
 import { Recipe } from './Recipe';
 import { RecipeForm } from './RecipeForm';
+import { TitlePage } from './TitlePage';
 import { ToC } from './ToC';
 
 type Props = {
@@ -35,6 +36,9 @@ export function Page({
         ${left ? 'from-90%' : 'from-0%'}
         ${left ? 'to-[#A89971]' : 'to-[#FFE8AA]'}
         ${left || 'to-10%'}`}>
+      {pageData.type === 'title' && (
+        <TitlePage title={pageData.data[0].text || ''} />
+      )}
       {pageData.type === 'toc' && (
         <ToC
           pageData={pageData}
