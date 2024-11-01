@@ -24,22 +24,19 @@ export function CarouselContents({ setIsOpen, cookbooks }: Props) {
         return (
           <button
             className="shrink-0 w-[150px] h-[210px] border-white border-2
-                rounded-[6px] hover:scale-105"
+                rounded-[6px] hover:scale-105 flex flex-col h-[206px]
+                items-center overflow-hidden break-words text-[26px]"
             onClick={() => {
               setIsOpen(false);
               setId(book.cookbookId);
               navigate(`/cookbook/${book.cookbookId}/page/1`);
             }}
-            key={`cookbook${book.cookbookId}`}>
-            <div
-              className="flex flex-col h-[206px] overflow-hidden
-                break-words text-[26px] rounded-[6px]"
-              style={{ backgroundColor: bgColor }}>
-              <div className="basis-[40px]"></div>
-              <p className="text-pretty" style={{ color: titleColor }}>
-                {book.title}
-              </p>
-            </div>
+            key={`cookbook${book.cookbookId}`}
+            style={{ backgroundColor: bgColor }}>
+            <div className="basis-[40px]"></div>
+            <p className="text-pretty" style={{ color: titleColor }}>
+              {book.title}
+            </p>
           </button>
         );
       })}
