@@ -27,7 +27,8 @@ export function ToC({
 }: tocIndividualPageProps) {
   let keyCount = -1;
   const { pageNum } = useParams();
-  const { cookbookId } = useContext(CookbookContext);
+  const { cookbook } = useContext(CookbookContext);
+  const cookbookId = cookbook?.cookbookId;
   const currentPage = pages.findIndex((e) => e === pageData);
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [entryToMove, setEntryToMove] = useState<HTMLElement>();

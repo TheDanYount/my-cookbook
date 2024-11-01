@@ -8,7 +8,8 @@ import { FaTrash } from 'react-icons/fa';
 import { authKey } from './UserContext';
 
 export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
-  const { cookbookId } = useContext(CookbookContext);
+  const { cookbook } = useContext(CookbookContext);
+  const cookbookId = cookbook?.cookbookId;
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
   const [imgUrl, setImgUrl] = useState<string>();
   const navigate = useNavigate();
