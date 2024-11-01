@@ -19,8 +19,8 @@ export function Menu({ mode }: Props) {
   const { user } = useContext(UserContext);
   const { handleSignIn } = useContext(UserContext);
   const { cookbookId } = useParams();
-  const { cookbook, setCookbook } = useContext(CookbookContext);
-  const [isOpen, setIsOpen] = useState(mode && !cookbook ? true : false);
+  const { setCookbook } = useContext(CookbookContext);
+  const [isOpen, setIsOpen] = useState<boolean>(cookbookId ? false : true);
 
   useEffect(() => {
     const stringAuth = localStorage.getItem(authKey);
@@ -31,6 +31,7 @@ export function Menu({ mode }: Props) {
   }, [handleSignIn]);
 
   useEffect(() => {
+    setIsOpen(cookbookId ? false : true);
     if (!cookbookId) return;
     async function getCookbook() {
       try {
@@ -78,8 +79,7 @@ export function Menu({ mode }: Props) {
         </div>
         {isOpen && (
           <>
-            {!mode &&
-              (user ? <HomePage setIsOpen={setIsOpen} /> : <SignInForm />)}
+            {!mode && (user ? <HomePage /> : <SignInForm />)}
             {mode === 'sign-up' && <SignUpForm />}
             {mode === 'create-cookbook' && <CookbookForm />}
           </>

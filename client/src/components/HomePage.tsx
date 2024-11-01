@@ -12,11 +12,7 @@ export type Cookbook = {
   userId: number;
 };
 
-type Props = {
-  setIsOpen: (boolean) => void;
-};
-
-export function HomePage({ setIsOpen }: Props) {
+export function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [cookbooks, setCookbooks] = useState<Cookbook[]>([]);
   const [carouselIndex, setCarouselIndex] = useState<number>(0);
@@ -100,11 +96,11 @@ export function HomePage({ setIsOpen }: Props) {
                 }px`,
               }}>
               {cookbooks.length >= visibleCookbooks && (
-                <CarouselContents setIsOpen={setIsOpen} cookbooks={cookbooks} />
+                <CarouselContents cookbooks={cookbooks} />
               )}
-              <CarouselContents setIsOpen={setIsOpen} cookbooks={cookbooks} />
+              <CarouselContents cookbooks={cookbooks} />
               {cookbooks.length >= visibleCookbooks && (
-                <CarouselContents setIsOpen={setIsOpen} cookbooks={cookbooks} />
+                <CarouselContents cookbooks={cookbooks} />
               )}
             </div>
           </div>

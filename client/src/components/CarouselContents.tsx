@@ -2,11 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { Cookbook } from './HomePage';
 
 type Props = {
-  setIsOpen: (boolean) => void;
   cookbooks: Cookbook[];
 };
 
-export function CarouselContents({ setIsOpen, cookbooks }: Props) {
+export function CarouselContents({ cookbooks }: Props) {
   const navigate = useNavigate();
   return (
     <>
@@ -23,10 +22,7 @@ export function CarouselContents({ setIsOpen, cookbooks }: Props) {
             className="shrink-0 w-[150px] h-[210px] border-white border-2
                 rounded-[6px] hover:scale-105 flex flex-col h-[206px]
                 items-center overflow-hidden break-words text-[26px]"
-            onClick={() => {
-              setIsOpen(false);
-              navigate(`/cookbook/${book.cookbookId}/page/1`);
-            }}
+            onClick={() => navigate(`/cookbook/${book.cookbookId}/page/1`)}
             key={`cookbook${book.cookbookId}`}
             style={{ backgroundColor: bgColor }}>
             <div className="basis-[40px]"></div>
