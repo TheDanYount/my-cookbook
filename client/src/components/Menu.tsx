@@ -44,7 +44,7 @@ export function Menu({ mode }: Props) {
         });
         const formattedResult = await result.json();
         if (!result.ok) throw new Error(formattedResult.error);
-        setCookbook(formattedResult[0]);
+        setCookbook(formattedResult);
       } catch (err) {
         alert(err);
       }

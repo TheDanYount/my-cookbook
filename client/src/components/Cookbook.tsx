@@ -5,9 +5,6 @@ import { useWindowDimensions } from '../lib/window-dimensions';
 import { buildToc, getRecipes } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
 
-// For development
-const style = '#4C301E';
-
 export type PageData = {
   type: string;
   data: {
@@ -22,10 +19,7 @@ export type PageData = {
   }[];
 };
 
-const dummyPagesForDevelopment = [
-  { type: 'title', data: [] },
-  { type: 'title', data: [] },
-];
+const zerothPagePlaceholder = { type: '', data: [] };
 
 export function Cookbook() {
   const { cookbookId, pageNum } = useParams();
@@ -49,7 +43,11 @@ export function Cookbook() {
         if (recipes) {
           setPages(() => {
             const toc = buildToc(recipes);
-            return [...dummyPagesForDevelopment, toc, ...recipes];
+            const titlePage = {
+              type: 'title',
+              data: [{ type: 'title', text: cookbook?.title }],
+            };
+            return [zerothPagePlaceholder, titlePage, toc, ...recipes];
           });
           setIsLoading(false);
         }
@@ -85,6 +83,10 @@ export function Cookbook() {
     navigate(`/cookbook/${cookbook?.cookbookId}/page/${+pageNum + number}`);
   }
 
+  const bgColorIndex = cookbook?.style.indexOf('bgColor');
+  const bgColor =
+    bgColorIndex && cookbook?.style.slice(bgColorIndex + 8, bgColorIndex + 15);
+
   return (
     <div
       className={`font-["Patrick_Hand"] text-[14px] ${
@@ -94,7 +96,7 @@ export function Cookbook() {
       } flex w-[588px] mt-[60px] ${width < 660 ? 'ml-[60px]' : 'mx-auto'}`}>
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
-        style={{ backgroundColor: style }}>
+        style={{ backgroundColor: bgColor || '#4C301E' }}>
         {isLoading === false && pages[leftPage]?.type && (
           <Page
             left
@@ -108,7 +110,7 @@ export function Cookbook() {
       </div>
       <div
         className="w-[294px] h-[372px] rounded-r-[6px] pt-[13px]"
-        style={{ backgroundColor: style }}>
+        style={{ backgroundColor: bgColor || '#4C301E' }}>
         {isLoading === false && pages[leftPage + 1]?.type && (
           <Page
             onPageTurn={handlePageTurn}
