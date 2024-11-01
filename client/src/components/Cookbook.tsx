@@ -31,7 +31,11 @@ export function Cookbook() {
   const { pageNum } = useParams();
   const { cookbookId } = useContext(CookbookContext);
   const navigate = useNavigate();
-  if (!cookbookId || !pageNum) navigate('/NotFound');
+  if (!cookbookId || !pageNum) {
+    alert('page not found on cookbook');
+    navigate('/NotFound');
+    throw new Error('page not found on cookbook');
+  }
   const [isLoading, setIsLoading] = useState<boolean>();
   const [pages, setPages] = useState<PageData[]>([]);
   const [leftPage, setLeftPage] = useState(
@@ -44,10 +48,7 @@ export function Cookbook() {
     async function setup() {
       setIsLoading(true);
       try {
-        if (!cookbookId) return;
         const recipes = await getRecipes(cookbookId);
-        console.log(recipes);
-        console.log(recipes && 'hi');
         if (recipes) {
           setPages(() => {
             const toc = buildToc(recipes);
@@ -70,10 +71,7 @@ export function Cookbook() {
     }
   }, [width, smallScreenShift]);
 
-  if (
-    isLoading === false &&
-    (!pageNum || +pageNum < 1 || +pageNum > pages.length - 1)
-  ) {
+  if (isLoading === false && (+pageNum < 1 || +pageNum > pages.length - 1)) {
     navigate('/NotFound');
     return;
   }
