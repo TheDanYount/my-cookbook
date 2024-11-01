@@ -5,7 +5,7 @@ import { UserContext } from './UserContext';
 
 export function SignUpForm() {
   const navigate = useNavigate();
-  const { handleSignIn } = useContext(UserContext);
+  const { handleSignIn, handleSignOut } = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [firstName, setFirstName] = useState('');
@@ -17,6 +17,7 @@ export function SignUpForm() {
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [email, setEmail] = useState('');
+  handleSignOut();
 
   async function imgPreview(file) {
     if (file) {
