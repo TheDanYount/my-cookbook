@@ -47,7 +47,8 @@ export function CookbookForm() {
           <input
             name="title"
             value={title}
-            className="block w-[200px] bg-[#C45056] border-2 rounded-[6px]"
+            className="block w-[200px] border-2 rounded-[6px]"
+            style={{ backgroundColor: user?.style }}
             onChange={(e) => setTitle(e.currentTarget.value)}
           />
         </label>

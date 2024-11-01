@@ -57,8 +57,9 @@ export function Menu({ mode }: Props) {
       <div
         className={`absolute top-0 transition-all duration-500 ${
           isOpen ? 'w-4/5 left-[10%]' : 'w-[50px] left-0'
-        } h-full bg-[#C45056] font-["Shantell_Sans"] text-white z-50
-        shadow-[0_0_6px_2px_#000000aa]`}>
+        } h-full font-["Shantell_Sans"] text-white z-50
+        shadow-[0_0_6px_2px_#000000aa]`}
+        style={{ backgroundColor: `${user ? user.style : '#C45056'}` }}>
         <div className="flex justify-between">
           <button
             className="w-[50px] h-[50px] children-hover "
