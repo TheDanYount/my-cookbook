@@ -1,6 +1,5 @@
 import { useContext, useState } from 'react';
 import { authKey, UserContext } from './UserContext';
-import { CookbookContext } from './CookbookContext';
 import { useNavigate } from 'react-router-dom';
 
 export function CookbookForm() {
@@ -8,7 +7,6 @@ export function CookbookForm() {
   const [titleColor, setTitleColor] = useState('#ffffff');
   const [bgColor, setBgColor] = useState('#4C301E');
   const { user } = useContext(UserContext);
-  const { setId } = useContext(CookbookContext);
   const navigate = useNavigate();
 
   async function handlePsuedoSubmit() {
@@ -31,9 +29,7 @@ export function CookbookForm() {
       const formattedResult = await result.json();
       if (!result.ok) throw new Error(formattedResult.error);
       console.log(formattedResult.cookbookId);
-      setId(formattedResult.cookbookId);
       alert('Cookbook added successfully!');
-      setId(formattedResult.cookbookId);
       navigate(`/cookbook/${formattedResult.cookbookId}/page/1`);
     } catch (err) {
       alert(err);

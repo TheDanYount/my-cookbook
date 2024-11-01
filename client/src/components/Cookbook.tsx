@@ -28,14 +28,9 @@ const dummyPagesForDevelopment = [
 ];
 
 export function Cookbook() {
-  const { pageNum } = useParams();
-  const { cookbookId } = useContext(CookbookContext);
+  const { cookbookId, pageNum } = useParams();
+  const { cookbook } = useContext(CookbookContext);
   const navigate = useNavigate();
-  if (!cookbookId || !pageNum) {
-    alert('page not found on cookbook');
-    navigate('/NotFound');
-    throw new Error('page not found on cookbook');
-  }
   const [isLoading, setIsLoading] = useState<boolean>();
   const [pages, setPages] = useState<PageData[]>([]);
   const [leftPage, setLeftPage] = useState(
@@ -45,10 +40,12 @@ export function Cookbook() {
   const [smallScreenShift, setSmallScreenShift] = useState(width < 660);
 
   useEffect(() => {
+    if (!cookbook || !cookbookId || cookbook?.cookbookId !== +cookbookId)
+      return;
     async function setup() {
       setIsLoading(true);
       try {
-        const recipes = await getRecipes(cookbookId);
+        const recipes = await getRecipes(cookbook?.cookbookId);
         if (recipes) {
           setPages(() => {
             const toc = buildToc(recipes);
@@ -61,7 +58,17 @@ export function Cookbook() {
       }
     }
     setup();
-  }, [cookbookId]);
+  }, [cookbook, cookbookId]);
+
+  useEffect(() => {
+    if (isLoading !== false) return;
+    if (!pageNum || +pageNum < 1 || +pageNum > pages.length - 1) {
+      alert('page not found');
+      navigate('/NotFound');
+      throw new Error('page not found');
+    }
+    setLeftPage(+pageNum - (+pageNum % 2 ? 0 : 1));
+  }, [pageNum, navigate, isLoading, pages.length]);
 
   useEffect(() => {
     if (width < 660 && smallScreenShift === false) {
@@ -71,19 +78,11 @@ export function Cookbook() {
     }
   }, [width, smallScreenShift]);
 
-  if (isLoading === false && (+pageNum < 1 || +pageNum > pages.length - 1)) {
-    navigate('/NotFound');
-    return;
-  }
-
-  if (!(isLoading === false)) {
-    return 'Loading';
-  }
+  if (!(isLoading === false)) return 'Loading';
 
   function handlePageTurn(number) {
     if (!pageNum) return;
-    navigate(`/cookbook/${cookbookId}/page/${+pageNum + number}`);
-    setLeftPage(+pageNum + number - ((+pageNum + number + 1) % 2));
+    navigate(`/cookbook/${cookbook?.cookbookId}/page/${+pageNum + number}`);
   }
 
   return (
@@ -98,7 +97,7 @@ export function Cookbook() {
         style={{ backgroundColor: style }}>
         {isLoading === false && pages[leftPage]?.type && (
           <Page
-            left={true}
+            left
             onPageTurn={handlePageTurn}
             thisPageNum={leftPage}
             pageData={pages[leftPage]}
@@ -112,7 +111,6 @@ export function Cookbook() {
         style={{ backgroundColor: style }}>
         {isLoading === false && pages[leftPage + 1]?.type && (
           <Page
-            left={false}
             onPageTurn={handlePageTurn}
             thisPageNum={leftPage + 1}
             pageData={pages[leftPage + 1]}

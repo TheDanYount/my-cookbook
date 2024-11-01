@@ -5,7 +5,7 @@ import { RecipeForm } from './RecipeForm';
 import { ToC } from './ToC';
 
 type Props = {
-  left: boolean;
+  left?: boolean;
   onPageTurn: (number) => void;
   thisPageNum: number;
   pageData: PageData;
