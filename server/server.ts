@@ -203,6 +203,31 @@ app.post(
   }
 );
 
+app.get(
+  '/api/read-cookbook/:cookbookId',
+  authMiddleware,
+  async (req, res, next) => {
+    try {
+      const userId = req.user?.userId;
+      const { cookbookId } = req.params;
+      if (!req.user?.userId)
+        throw new ClientError(401, 'user not properly logged in');
+      if (!Number.isInteger(+cookbookId))
+        throw new ClientError(401, 'cookbookId must be an integer');
+      const sql = `
+    select *
+    from "cookbooks"
+    where "userId" = $1 AND "cookbookId" = $2
+    `;
+      const result = await db.query(sql, [userId, cookbookId]);
+      if (!result.rows[0]) throw new ClientError(404, 'cookbook not found');
+      res.status(200).json(result.rows);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 app.get('/api/read-cookbooks', authMiddleware, async (req, res, next) => {
   try {
     const userId = req.user?.userId;
