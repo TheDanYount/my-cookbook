@@ -1,11 +1,79 @@
 import { PageData } from '../components/Cookbook';
 import { authKey } from '../components/UserContext';
 
+function buildRecipeData(formattedResult) {
+  const recipePageDataArray: PageData[] = [];
+  for (const recipe of formattedResult) {
+    const ingredients = JSON.parse(recipe.ingredients);
+    const directions = JSON.parse(recipe.directions);
+    const notes = JSON.parse(recipe.notes);
+    const recipeId = recipe.recipeId;
+    let firstIngredients = true;
+    let firstDirections = true;
+    let firstNotes = true;
+    let usedImage = false;
+    for (let i = 0; i < recipe.length; i++) {
+      const newData: PageData['data'] = [];
+      if (i === 0) {
+        newData.push({
+          type: 'title',
+          text: recipe.title,
+          length: recipe.length,
+          id: recipeId,
+        });
+      }
+      if (i === recipe.length - 1 && !usedImage && !ingredients[i]) {
+        newData.push({
+          type: 'img-and-ingredients',
+          text: '',
+          fileUrl: recipe.imageUrl,
+        });
+      } else if (ingredients[i] && !usedImage) {
+        usedImage = true;
+        newData.push({
+          type: 'img-and-ingredients',
+          text: ingredients[i],
+          fileUrl: recipe.imageUrl,
+          first: firstIngredients,
+        });
+        firstIngredients = false;
+      } else if (ingredients[i] && usedImage) {
+        newData.push({
+          type: 'img-and-ingredients',
+          text: ingredients[i],
+          first: firstIngredients,
+        });
+        firstIngredients = false;
+      }
+      if (directions[i]) {
+        newData.push({
+          type: 'directions',
+          text: directions[i],
+          first: firstDirections,
+        });
+        firstDirections = false;
+      }
+      if (notes[i]) {
+        newData.push({
+          type: 'notes',
+          text: notes[i],
+          first: firstNotes,
+        });
+        firstNotes = false;
+      }
+      recipePageDataArray.push({
+        type: 'recipe',
+        data: newData,
+      });
+    }
+  }
+  return recipePageDataArray;
+}
+
 export async function getRecipes(cookbookId) {
   try {
     const auth = localStorage.getItem(authKey);
     if (!auth) throw new Error('not properly logged in');
-    const recipePageDataArray: PageData[] = [];
     const result = await fetch(`/api/read-recipes/${cookbookId}`, {
       headers: {
         Authorization: `Bearer ${JSON.parse(auth).token}`,
@@ -13,54 +81,7 @@ export async function getRecipes(cookbookId) {
     });
     const formattedResult = await result.json();
     if (!result.ok) throw new Error(formattedResult.error);
-    for (const recipe of formattedResult) {
-      const ingredients = JSON.parse(recipe.ingredients);
-      const directions = JSON.parse(recipe.directions);
-      const notes = JSON.parse(recipe.notes);
-      const recipeId = recipe.recipeId;
-      let usedImage = false;
-      for (let i = 0; i < recipe.length; i++) {
-        const newData: PageData['data'] = [];
-        if (i === 0) {
-          newData.push({
-            type: 'title',
-            text: recipe.title,
-            length: recipe.length,
-            id: recipeId,
-          });
-        }
-        if (ingredients[i] && !usedImage) {
-          usedImage = true;
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-            fileUrl: recipe.imageUrl,
-          });
-        } else if (ingredients[i] && usedImage) {
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-          });
-        }
-        if (directions[i]) {
-          newData.push({
-            type: 'directions',
-            text: directions[i],
-          });
-        }
-        if (notes[i]) {
-          newData.push({
-            type: 'notes',
-            text: notes[i],
-          });
-        }
-        recipePageDataArray.push({
-          type: 'recipe',
-          data: newData,
-        });
-      }
-    }
-    return recipePageDataArray;
+    return buildRecipeData(formattedResult);
   } catch (err) {
     alert(err);
   }
@@ -70,7 +91,6 @@ export async function getRecipeById(cookbookId, recipeId) {
   try {
     const auth = localStorage.getItem(authKey);
     if (!auth) throw new Error('not properly logged in');
-    const recipePageDataArray: PageData[] = [];
     const result = await fetch(
       `/api/read-recipe-by-id/${cookbookId}/${recipeId}`,
       {
@@ -81,53 +101,7 @@ export async function getRecipeById(cookbookId, recipeId) {
     );
     const formattedResult = await result.json();
     if (!result.ok) throw new Error(formattedResult.error);
-    for (const recipe of formattedResult) {
-      const ingredients = JSON.parse(recipe.ingredients);
-      const directions = JSON.parse(recipe.directions);
-      const notes = JSON.parse(recipe.notes);
-      let usedImage = false;
-      for (let i = 0; i < recipe.length; i++) {
-        const newData: PageData['data'] = [];
-        if (i === 0) {
-          newData.push({
-            type: 'title',
-            text: recipe.title,
-            length: recipe.length,
-            id: recipe.recipeId,
-          });
-        }
-        if (ingredients[i] && !usedImage) {
-          usedImage = true;
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-            fileUrl: recipe.imageUrl,
-          });
-        } else if (ingredients[i] && usedImage) {
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-          });
-        }
-        if (directions[i]) {
-          newData.push({
-            type: 'directions',
-            text: directions[i],
-          });
-        }
-        if (notes[i]) {
-          newData.push({
-            type: 'notes',
-            text: notes[i],
-          });
-        }
-        recipePageDataArray.push({
-          type: 'recipe',
-          data: newData,
-        });
-      }
-    }
-    return recipePageDataArray;
+    return buildRecipeData(formattedResult);
   } catch (err) {
     alert(err);
   }

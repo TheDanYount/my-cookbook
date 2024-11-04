@@ -1,9 +1,8 @@
 import React from 'react';
 import { IndividualPageProps } from './Page';
 
-export function Recipe({ pageData, pages }: IndividualPageProps) {
+export function Recipe({ pageData }: IndividualPageProps) {
   let keyCount = -1;
-  const currentPage = pages.findIndex((e) => e === pageData);
 
   return (
     <div className="text-xs px-[10px]">
@@ -22,46 +21,57 @@ export function Recipe({ pageData, pages }: IndividualPageProps) {
           case 'title':
             return (
               <h1
-                className='text-center text-[18px] my-[4px] w-full font-["Shantell_Sans"] font-semibold'
-                key={`page:${currentPage},key:${keyCount}`}>
+                className='text-center text-[18px] my-[12px] w-full font-["Shantell_Sans"] font-semibold'
+                key={'key:' + keyCount}>
                 {formattedText}
               </h1>
             );
           case 'img-and-ingredients':
             return (
-              <div
-                className="flex my-[-4px]"
-                key={`page:${currentPage},key:${keyCount}`}>
-                <div className={`basis-[120px] h-[120px] my-1`}>
-                  <img
-                    src={e.fileUrl}
-                    className="object-cover h-full mx-auto"
-                  />
+              <React.Fragment key={'key:' + keyCount}>
+                <div className="flex my-[-4px]">
+                  <div className={`basis-[120px] h-[120px] my-1`}>
+                    <img
+                      src={e.fileUrl}
+                      className="object-cover h-full mx-auto"
+                    />
+                  </div>
+                  <div className={`block basis-[141px] px-[2px] my-1`}>
+                    {e.first && (
+                      <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                        Ingredients
+                      </h2>
+                    )}
+                    <p style={{ fontSize: '14px' }}>{formattedText}</p>
+                  </div>
                 </div>
-                <p
-                  className={`block basis-[141px] px-[2px] my-1`}
-                  style={{ fontSize: '14px' }}>
-                  {formattedText}
-                </p>
-              </div>
+              </React.Fragment>
             );
           case 'directions':
             return (
-              <p
-                className={`px-[2px] my-1`}
-                style={{ fontSize: '14px' }}
-                key={`page:${currentPage},key:${keyCount}`}>
-                {formattedText}
-              </p>
+              <React.Fragment key={'key:' + keyCount}>
+                {e.first && (
+                  <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                    Directions
+                  </h2>
+                )}
+                <p className={`px-[2px] my-1`} style={{ fontSize: '14px' }}>
+                  {formattedText}
+                </p>
+              </React.Fragment>
             );
           case 'notes':
             return (
-              <p
-                className={`px-[2px] my-1`}
-                style={{ fontSize: '14px' }}
-                key={`page:${currentPage},key:${keyCount}`}>
-                {formattedText}
-              </p>
+              <React.Fragment key={'key:' + keyCount}>
+                {e.first && (
+                  <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                    Notes
+                  </h2>
+                )}
+                <p className={`px-[2px] my-1`} style={{ fontSize: '14px' }}>
+                  {formattedText}
+                </p>
+              </React.Fragment>
             );
         }
       })}
