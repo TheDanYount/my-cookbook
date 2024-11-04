@@ -96,7 +96,8 @@ app.post('/api/auth/sign-in', async (req, res, next) => {
     const result = await db.query(sql, [username]);
     const user = result.rows[0];
     if (!user) throw new ClientError(401, 'User not found!');
-    if (!(await argon2.verify(user.password, password))) {
+    const isAuthorized = await argon2.verify(user.password, password);
+    if (!isAuthorized) {
       throw new ClientError(401, 'Invalid credentials');
     }
     const payload = {
