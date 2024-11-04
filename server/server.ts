@@ -47,6 +47,14 @@ app.post(
         lastName,
         style,
       } = req.body;
+      const usernameCheckSql = `
+      select *
+      from "users"
+      where "username" = $1
+      `;
+      const usernameCheckResult = await db.query(usernameCheckSql, [username]);
+      if (usernameCheckResult.rows[0])
+        throw new ClientError(401, `username already exists`);
       const hashedPassword = await argon2.hash(password);
       const photoUrl = `/images/recipe-images/${req?.file?.filename}`;
       let sql;
