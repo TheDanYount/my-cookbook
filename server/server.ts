@@ -54,7 +54,7 @@ app.post(
       `;
       const usernameCheckResult = await db.query(usernameCheckSql, [username]);
       if (usernameCheckResult.rows[0])
-        throw new ClientError(401, `username already exists`);
+        throw new ClientError(400, `username already exists`);
       const hashedPassword = await argon2.hash(password);
       const photoUrl = `/images/recipe-images/${req?.file?.filename}`;
       let sql;
@@ -94,8 +94,8 @@ app.post(
 app.post('/api/auth/sign-in', async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    if (!username) throw new ClientError(401, 'missing username');
-    if (!password) throw new ClientError(401, 'missing password');
+    if (!username) throw new ClientError(400, 'missing username');
+    if (!password) throw new ClientError(400, 'missing password');
     const sql = `
     select *
     from "users"
@@ -103,7 +103,7 @@ app.post('/api/auth/sign-in', async (req, res, next) => {
     `;
     const result = await db.query(sql, [username]);
     const user = result.rows[0];
-    if (!user) throw new ClientError(401, 'user not found');
+    if (!user) throw new ClientError(404, 'user not found');
     const isAuthorized = await argon2.verify(user.password, password);
     if (!isAuthorized) {
       throw new ClientError(401, 'invalid credentials');
