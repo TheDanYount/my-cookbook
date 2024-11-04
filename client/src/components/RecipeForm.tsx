@@ -12,10 +12,20 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   const { cookbook } = useContext(CookbookContext);
   const cookbookId = cookbook?.cookbookId;
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
-  const [title, setTitle] = useState('');
-  const [ingredients, setIngredients] = useState('');
-  const [directions, setDirections] = useState('');
-  const [notes, setNotes] = useState('');
+  const [title, setTitle] = useState(
+    pageData.data.find((e) => e.type === 'title')?.text || ''
+  );
+  const [ingredients, setIngredients] = useState(
+    pageData.data.find((e) => e.type === 'img-and-ingredients')?.text ||
+      pageData.data.find((e) => e.type === 'ingredients')?.text ||
+      ''
+  );
+  const [directions, setDirections] = useState(
+    pageData.data.find((e) => e.type === 'directions')?.text || ''
+  );
+  const [notes, setNotes] = useState(
+    pageData.data.find((e) => e.type === 'notes')?.text || ''
+  );
   const [imgUrl, setImgUrl] = useState<string>();
   const navigate = useNavigate();
   let keyCount = -1;
