@@ -154,9 +154,9 @@ export function getRecipeForm() {
     type: 'recipeForm',
     data: [
       { type: 'title' },
-      { type: 'img-and-ingredients' },
-      { type: 'directions' },
-      { type: 'notes' },
+      { type: 'img-and-ingredients', first: true },
+      { type: 'directions', first: true },
+      { type: 'notes', first: true },
       { type: 'submit' },
     ],
   };

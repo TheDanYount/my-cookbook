@@ -28,24 +28,22 @@ export function Recipe({ pageData }: IndividualPageProps) {
             );
           case 'img-and-ingredients':
             return (
-              <React.Fragment key={'key:' + keyCount}>
-                <div className="flex my-[-4px]">
-                  <div className={`basis-[120px] h-[120px] my-1`}>
-                    <img
-                      src={e.fileUrl}
-                      className="object-cover h-full mx-auto"
-                    />
-                  </div>
-                  <div className={`block basis-[141px] px-[2px] my-1`}>
-                    {e.first && (
-                      <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
-                        Ingredients
-                      </h2>
-                    )}
-                    <p style={{ fontSize: '14px' }}>{formattedText}</p>
-                  </div>
+              <div className="flex" key={'key:' + keyCount}>
+                <div className={`basis-[120px] h-[120px]`}>
+                  <img
+                    src={e.fileUrl}
+                    className="object-cover h-full mx-auto"
+                  />
                 </div>
-              </React.Fragment>
+                <div className={`block basis-[141px] px-[2px]`}>
+                  {e.first && (
+                    <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                      Ingredients
+                    </h2>
+                  )}
+                  <p style={{ fontSize: '14px' }}>{formattedText}</p>
+                </div>
+              </div>
             );
           case 'directions':
             return (
@@ -55,7 +53,7 @@ export function Recipe({ pageData }: IndividualPageProps) {
                     Directions
                   </h2>
                 )}
-                <p className={`px-[2px] my-1`} style={{ fontSize: '14px' }}>
+                <p className={`px-[2px]`} style={{ fontSize: '14px' }}>
                   {formattedText}
                 </p>
               </React.Fragment>
@@ -68,7 +66,7 @@ export function Recipe({ pageData }: IndividualPageProps) {
                     Notes
                   </h2>
                 )}
-                <p className={`px-[2px] my-1`} style={{ fontSize: '14px' }}>
+                <p className={`px-[2px]`} style={{ fontSize: '14px' }}>
                   {formattedText}
                 </p>
               </React.Fragment>
