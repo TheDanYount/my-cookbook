@@ -47,6 +47,14 @@ app.post(
         lastName,
         style,
       } = req.body;
+      const usernameCheckSql = `
+      select *
+      from "users"
+      where "username" = $1
+      `;
+      const usernameCheckResult = await db.query(usernameCheckSql, [username]);
+      if (usernameCheckResult.rows[0])
+        throw new ClientError(401, `username already exists`);
       const hashedPassword = await argon2.hash(password);
       const photoUrl = `/images/recipe-images/${req?.file?.filename}`;
       let sql;
@@ -75,7 +83,7 @@ app.post(
         params = [username, hashedPassword, email, firstName, lastName, style];
       }
       const result = await db.query(sql, params);
-      if (!result.rows[0]) throw new ClientError(404, `Sign-up failed`);
+      if (!result.rows[0]) throw new ClientError(404, `sign-up failed`);
       res.status(201).json(result.rows[0]);
     } catch (err) {
       next(err);
@@ -86,8 +94,8 @@ app.post(
 app.post('/api/auth/sign-in', async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    if (!username) throw new ClientError(401, 'Missing username!');
-    if (!password) throw new ClientError(401, 'Missing password!');
+    if (!username) throw new ClientError(401, 'missing username');
+    if (!password) throw new ClientError(401, 'missing password');
     const sql = `
     select *
     from "users"
@@ -95,9 +103,10 @@ app.post('/api/auth/sign-in', async (req, res, next) => {
     `;
     const result = await db.query(sql, [username]);
     const user = result.rows[0];
-    if (!user) throw new ClientError(401, 'User not found!');
-    if (!(await argon2.verify(user.password, password))) {
-      throw new ClientError(401, 'Invalid credentials');
+    if (!user) throw new ClientError(401, 'user not found');
+    const isAuthorized = await argon2.verify(user.password, password);
+    if (!isAuthorized) {
+      throw new ClientError(401, 'invalid credentials');
     }
     const payload = {
       userId: user.userId,
