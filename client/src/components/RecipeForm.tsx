@@ -9,6 +9,7 @@ import { authKey } from './UserContext';
 import React from 'react';
 
 export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
+  console.log(pageData);
   const { cookbook } = useContext(CookbookContext);
   const cookbookId = cookbook?.cookbookId;
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
@@ -40,10 +41,25 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
 
   useEffect(() => {
     if (!titleElement.current) return;
-    console.log('titleElement useEffect is running');
     titleElement.current.style.height =
       titleElement.current.scrollHeight + 'px';
   }, [titleElement]);
+  useEffect(() => {
+    if (!ingredientsElement.current) return;
+    ingredientsElement.current.style.height =
+      ingredientsElement.current.scrollHeight + 'px';
+  }, [ingredientsElement]);
+  useEffect(() => {
+    if (!directionsElement.current) return;
+    directionsElement.current.style.height =
+      directionsElement.current.scrollHeight + 'px';
+  }, [directionsElement]);
+  useEffect(() => {
+    console.log('running');
+    if (!notesElement.current) return;
+    notesElement.current.style.height =
+      notesElement.current.scrollHeight + 'px';
+  }, [notesElement]);
 
   async function imgPreview(file, data) {
     data.fileChanged = true;
@@ -76,7 +92,10 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
     const title = formPages[0].data[0].text as string;
     data.append('cookbookId', String(cookbookId));
     data.append('title', title);
-    const ingredients = extractText(formPages, 'img-and-ingredients'); // An array
+    const ingredients = [
+      ...extractText(formPages, 'ingredients'),
+      ...extractText(formPages, 'img-and-ingredients'),
+    ]; // An array
     data.append('ingredients', JSON.stringify(ingredients));
     const directions = extractText(formPages, 'directions'); // An array
     data.append('directions', JSON.stringify(directions));

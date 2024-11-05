@@ -22,7 +22,12 @@ function buildRecipeData(formattedResult) {
           id: recipeId,
         });
       }
-      if (i === recipe.length - 1 && !usedImage && !ingredients[i]) {
+      if (
+        i === recipe.length - 1 &&
+        !usedImage &&
+        !ingredients[i] &&
+        recipe.imageUrl
+      ) {
         newData.push({
           type: 'img-and-ingredients',
           text: '',
@@ -39,7 +44,7 @@ function buildRecipeData(formattedResult) {
         firstIngredients = false;
       } else if (ingredients[i] && usedImage) {
         newData.push({
-          type: 'img-and-ingredients',
+          type: 'ingredients',
           text: ingredients[i],
           first: firstIngredients,
         });
