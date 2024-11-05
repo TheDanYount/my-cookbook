@@ -37,7 +37,6 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   async function imgPreview(file, data) {
     data.fileChanged = true;
     if (!file) {
-      setImgUrl(undefined);
       data.file = undefined;
       data.fileUrl = undefined;
       return;
