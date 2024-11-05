@@ -149,6 +149,26 @@ export function addToToc(pages: PageData[], recipe) {
   }
 }
 
+export function updateToc(pages: PageData[], recipe) {
+  for (let i = 2; i < pages.length; i++) {
+    if (pages[i].type === 'toc') {
+      const oldEntryIndex = pages[i].data.findIndex(
+        (e) => e.id === recipe.recipeId
+      );
+      if (oldEntryIndex !== -1) {
+        pages[i].data.splice(oldEntryIndex, 1, {
+          type: 'recipe',
+          text: recipe.title,
+          pageNum: pages[i].data[oldEntryIndex].pageNum,
+          length: recipe.length,
+          id: recipe.recipeId,
+        });
+        break;
+      }
+    }
+  }
+}
+
 export function getRecipeForm() {
   return {
     type: 'recipeForm',

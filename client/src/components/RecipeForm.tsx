@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
-import { addToToc, getRecipeById } from '../lib/page-scaffolding';
+import { addToToc, updateToc, getRecipeById } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
 import { FaTrash } from 'react-icons/fa';
 import { authKey } from './UserContext';
@@ -27,12 +27,23 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
     pageData.data.find((e) => e.type === 'notes')?.text || ''
   );
   const [imgUrl, setImgUrl] = useState<string>();
+  const titleElement = useRef<HTMLTextAreaElement>(null);
+  const ingredientsElement = useRef<HTMLTextAreaElement>(null);
+  const directionsElement = useRef<HTMLTextAreaElement>(null);
+  const notesElement = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   let keyCount = -1;
 
   useEffect(() => {
     setImgUrl(imgStore?.fileUrl);
   }, [imgStore?.fileUrl]);
+
+  useEffect(() => {
+    if (!titleElement.current) return;
+    console.log('titleElement useEffect is running');
+    titleElement.current.style.height =
+      titleElement.current.scrollHeight + 'px';
+  }, [titleElement]);
 
   async function imgPreview(file, data) {
     data.fileChanged = true;
@@ -109,6 +120,7 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
           ...newRecipePages
         );
         setPages(pages);
+        updateToc(pages, formattedResult);
         navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
       } catch (err) {
         alert(err);
@@ -165,6 +177,7 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                   py-[12px] bg-[#ffffff88] h-[40px] overflow-hidden
                   leading-[16px] cols`}
                 placeholder="[Input title here]"
+                ref={titleElement}
                 onChange={(event) => {
                   e.text = event.target.value;
                   setTitle(event.target.value);
@@ -229,9 +242,10 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                   <textarea
                     name="ingredients"
                     rows={1}
-                    className={`w-full resize-none bg-[#ffffff88]`}
+                    className={`w-full resize-none bg-[#ffffff88] overflow-hidden`}
                     placeholder="[Input ingredients here]"
                     style={{ fontSize: '14px' }}
+                    ref={ingredientsElement}
                     onChange={(event) => {
                       e.text = event.target.value;
                       setIngredients(event.target.value);
@@ -260,9 +274,10 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                   <textarea
                     name="ingredients"
                     rows={1}
-                    className={`w-full resize-none bg-[#ffffff88]`}
+                    className={`w-full resize-none bg-[#ffffff88] overflow-hidden`}
                     placeholder="[Input ingredients here]"
                     style={{ fontSize: '14px' }}
+                    ref={ingredientsElement}
                     onChange={(event) => {
                       e.text = event.target.value;
                       setIngredients(event.target.value);
@@ -288,9 +303,11 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                 <textarea
                   name="directions"
                   rows={1}
-                  className={`block w-full px-[2px] resize-none bg-[#ffffff88]`}
+                  className={`block w-full px-[2px] resize-none bg-[#ffffff88]
+                    overflow-hidden`}
                   placeholder="[Input directions here]"
                   style={{ fontSize: '14px' }}
+                  ref={directionsElement}
                   onChange={(event) => {
                     e.text = event.target.value;
                     setDirections(event.target.value);
@@ -320,6 +337,7 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                   placeholder="[Input notes here]"
                   value={notes}
                   style={{ fontSize: '14px' }}
+                  ref={notesElement}
                   onChange={(event) => {
                     e.text = event.target.value;
                     setNotes(event.target.value);
