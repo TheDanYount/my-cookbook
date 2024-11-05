@@ -147,6 +147,11 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
       }
     }
   }
+
+  function checkPageEnd() {
+    console.log('hi');
+  }
+
   return (
     <div className="text-xs px-[10px]">
       {pageData.data.map((e) => {
@@ -156,11 +161,19 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
             return (
               <textarea
                 name="title"
-                className={`block text-center text-base w-full resize-none py-[12px] bg-[#ffffff88] h-[40px] overflow-hidden leading-[16px]`}
+                rows={1}
+                className={`block text-center text-base w-full resize-none
+                  py-[12px] bg-[#ffffff88] h-[40px] overflow-hidden
+                  leading-[16px] cols`}
                 placeholder="[Input title here]"
                 onChange={(event) => {
                   e.text = event.target.value;
                   setTitle(event.target.value);
+                  const beforeHeight = event.target.style.height;
+                  event.target.style.height = 'auto';
+                  event.target.style.height = event.target.scrollHeight + 'px';
+                  const afterHeight = event.target.style.height;
+                  if (beforeHeight !== afterHeight) checkPageEnd();
                 }}
                 value={title}
                 key={`key:${keyCount}`}></textarea>
@@ -216,12 +229,19 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                   )}
                   <textarea
                     name="ingredients"
-                    placeholder="[Input ingredients here]"
+                    rows={1}
                     className={`w-full resize-none bg-[#ffffff88]`}
+                    placeholder="[Input ingredients here]"
                     style={{ fontSize: '14px' }}
                     onChange={(event) => {
                       e.text = event.target.value;
                       setIngredients(event.target.value);
+                      const beforeHeight = event.target.style.height;
+                      event.target.style.height = 'auto';
+                      event.target.style.height =
+                        event.target.scrollHeight + 'px';
+                      const afterHeight = event.target.style.height;
+                      if (beforeHeight !== afterHeight) checkPageEnd();
                     }}
                     value={ingredients}></textarea>
                 </div>
@@ -240,12 +260,19 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                   )}
                   <textarea
                     name="ingredients"
-                    placeholder="[Input ingredients here]"
+                    rows={1}
                     className={`w-full resize-none bg-[#ffffff88]`}
+                    placeholder="[Input ingredients here]"
                     style={{ fontSize: '14px' }}
                     onChange={(event) => {
                       e.text = event.target.value;
                       setIngredients(event.target.value);
+                      const beforeHeight = event.target.style.height;
+                      event.target.style.height = 'auto';
+                      event.target.style.height =
+                        event.target.scrollHeight + 'px';
+                      const afterHeight = event.target.style.height;
+                      if (beforeHeight !== afterHeight) checkPageEnd();
                     }}
                     value={ingredients}></textarea>
                 </div>
@@ -261,12 +288,19 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                 )}
                 <textarea
                   name="directions"
-                  placeholder="[Input directions here]"
+                  rows={1}
                   className={`block w-full px-[2px] resize-none bg-[#ffffff88]`}
+                  placeholder="[Input directions here]"
                   style={{ fontSize: '14px' }}
                   onChange={(event) => {
                     e.text = event.target.value;
                     setDirections(event.target.value);
+                    const beforeHeight = event.target.style.height;
+                    event.target.style.height = 'auto';
+                    event.target.style.height =
+                      event.target.scrollHeight + 'px';
+                    const afterHeight = event.target.style.height;
+                    if (beforeHeight !== afterHeight) checkPageEnd();
                   }}
                   value={directions}></textarea>
               </React.Fragment>
@@ -281,14 +315,22 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                 )}
                 <textarea
                   name="notes"
+                  rows={1}
+                  className={`block w-full px-[2px] resize-none bg-[#ffffff88]
+                    overflow-hidden`}
                   placeholder="[Input notes here]"
-                  className={`block w-full px-[2px] resize-none bg-[#ffffff88]`}
+                  value={notes}
                   style={{ fontSize: '14px' }}
                   onChange={(event) => {
                     e.text = event.target.value;
                     setNotes(event.target.value);
-                  }}
-                  value={notes}></textarea>
+                    const beforeHeight = event.target.style.height;
+                    event.target.style.height = 'auto';
+                    event.target.style.height =
+                      event.target.scrollHeight + 'px';
+                    const afterHeight = event.target.style.height;
+                    if (beforeHeight !== afterHeight) checkPageEnd();
+                  }}></textarea>
               </React.Fragment>
             );
           case 'submit':
