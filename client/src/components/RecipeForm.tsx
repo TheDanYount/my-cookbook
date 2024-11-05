@@ -9,7 +9,6 @@ import { authKey } from './UserContext';
 import React from 'react';
 
 export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
-  console.log(pageData);
   const { cookbook } = useContext(CookbookContext);
   const cookbookId = cookbook?.cookbookId;
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
@@ -55,7 +54,6 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
       directionsElement.current.scrollHeight + 'px';
   }, [directionsElement]);
   useEffect(() => {
-    console.log('running');
     if (!notesElement.current) return;
     notesElement.current.style.height =
       notesElement.current.scrollHeight + 'px';
@@ -403,7 +401,9 @@ function extractText(formPages: PageData[], keyWord: string) {
     const keyInput = formPage.data.find((element) => element.type === keyWord);
     if (keyInput?.text) {
       textArray.push(keyInput.text);
-    } else textArray.push('');
+    } else {
+      if (!(keyWord === 'ingredients')) textArray.push('');
+    }
   }
   return textArray;
 }

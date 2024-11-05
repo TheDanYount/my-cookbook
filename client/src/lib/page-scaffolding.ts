@@ -198,13 +198,59 @@ export function convertRecipeToForm(
   for (let i = 0; i < length; i++) {
     pagesToConvert.push(pages[pageNum + i]);
   }
-  const newPages = pagesToConvert.map((page) => {
+  let usedIngredients = false;
+  let usedDirections = false;
+  let usedNotes = false;
+  const newPages = pagesToConvert.map((page, mapIndex) => {
+    if (
+      !usedIngredients &&
+      page.data.find((e) => e.type === 'img-and-ingredients')
+    )
+      usedIngredients = true;
+    if (!usedDirections && page.data.find((e) => e.type === 'directions'))
+      usedDirections = true;
+    if (!usedNotes && page.data.find((e) => e.type === 'notes'))
+      usedNotes = true;
+    const dataToAdd: PageData['data'] = [];
+    for (let i = 0; i < page.data.length; i++) {
+      const type = page.data[i].type;
+      if (!usedIngredients) {
+        if (type === 'img-and-ingredients') {
+          usedIngredients = true;
+        } else if (type === 'directions' || type === 'notes') {
+          dataToAdd.push({ type: 'img-and-ingredients', first: true });
+          usedIngredients = true;
+        }
+      }
+      if (!usedDirections) {
+        if (type === 'directions') {
+          usedIngredients = true;
+        } else if (type === 'notes') {
+          dataToAdd.push({ type: 'directions', first: true });
+          usedDirections = true;
+        }
+      }
+      if (!usedNotes && type === 'notes') {
+        usedNotes = true;
+      }
+      dataToAdd.push(page.data[i]);
+      if (
+        i === page.data.length - 1 &&
+        mapIndex === pagesToConvert.length - 1
+      ) {
+        if (!usedIngredients)
+          dataToAdd.push({ type: 'img-and-ingredients', first: true });
+        if (!usedDirections)
+          dataToAdd.push({ type: 'directions', first: true });
+        if (!usedNotes) dataToAdd.push({ type: 'notes', first: true });
+        dataToAdd.push({ type: 'submit' });
+      }
+    }
     return {
       type: 'recipeForm',
-      data: page.data,
+      data: dataToAdd,
     };
   });
-  newPages[newPages.length - 1].data.push({ type: 'submit' });
   setPages([
     ...pages.slice(0, pageNum),
     ...newPages,
