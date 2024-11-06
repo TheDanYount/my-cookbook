@@ -1,14 +1,23 @@
 import { useNavigate } from 'react-router-dom';
 import { useContext, useEffect, useState, useRef } from 'react';
 import { IndividualPageProps } from './Page';
-import { PageData } from './Cookbook';
+import { Entrant, PageData } from './Cookbook';
 import { addToToc, updateToc, getRecipeById } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
 import { FaTrash } from 'react-icons/fa';
 import { authKey } from './UserContext';
 import React from 'react';
 
-export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
+type RecipeFormIndividualPageProps = IndividualPageProps & {
+  thisPageNum: number;
+};
+
+export function RecipeForm({
+  pageData,
+  pages,
+  setPages,
+  thisPageNum,
+}: RecipeFormIndividualPageProps) {
   const { cookbook } = useContext(CookbookContext);
   const cookbookId = cookbook?.cookbookId;
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
@@ -31,7 +40,11 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   const ingredientsElement = useRef<HTMLTextAreaElement>(null);
   const directionsElement = useRef<HTMLTextAreaElement>(null);
   const notesElement = useRef<HTMLTextAreaElement>(null);
+  const simulationElement = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
+  const availableHeight = 398; // with current Cookbook Position, update if changed
+  const submitHeight = 24; // with current submit element, update if changed
+  const lineHeight = 16; // for non-title inputs with current font size, update if changed
   let keyCount = -1;
 
   useEffect(() => {
@@ -177,7 +190,96 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   }
 
   function checkPageEnd() {
-    console.log('hi');
+    const lastInput =
+      notesElement.current ||
+      directionsElement.current ||
+      ingredientsElement.current ||
+      titleElement.current;
+    if (!lastInput) return;
+    if (!simulationElement.current) return;
+    const lastInputRect = lastInput?.getBoundingClientRect();
+    const isSubmitPresent =
+      pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
+    const functionalBottom =
+      pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
+      lastInputRect.height < 120
+        ? lastInputRect.top + 120
+        : lastInputRect.bottom;
+    const spaceTaken = functionalBottom + (isSubmitPresent ? submitHeight : 0);
+    if (!(spaceTaken > availableHeight)) return;
+    let remainingExcess = spaceTaken - availableHeight;
+    const stateSetter =
+      lastInput === titleElement.current
+        ? setTitle
+        : lastInput === directionsElement.current
+        ? setDirections
+        : lastInput === ingredientsElement.current
+        ? setIngredients
+        : setNotes;
+    // The following means if the next page isn't part of this form
+    if (
+      !(
+        pages[thisPageNum + 1]?.type === 'recipeForm' &&
+        pages[thisPageNum + 1].data[0]?.type !== 'title'
+      )
+    ) {
+      pages.splice(thisPageNum + 1, 0, {
+        type: 'recipeForm',
+        data: [],
+      });
+    }
+    const nextPage = pages[thisPageNum + 1];
+    while (remainingExcess > 0) {
+      let entrantToBeMoved;
+      if (isSubmitPresent) {
+        entrantToBeMoved = pageData.data.pop() as Entrant;
+        remainingExcess -= submitHeight;
+      } else {
+        if (lastInputRect.height < remainingExcess + lineHeight) {
+          entrantToBeMoved = pageData.data.pop() as Entrant;
+          remainingExcess -= lastInputRect.height;
+          if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
+            pages[thisPageNum + 1].data[0].text =
+              entrantToBeMoved.text +
+              '\n' +
+              pages[thisPageNum + 1].data[0].text;
+            entrantToBeMoved = undefined;
+          }
+        } else {
+          simulationElement.current.style.width = lastInputRect.width + 'px';
+          const heightGoal =
+            lineHeight *
+            Math.floor((lastInputRect.height - remainingExcess) / lineHeight);
+          console.log('input value:', lastInput.value);
+          const [text, unformattedLeftover] = adjustInput(
+            heightGoal,
+            lastInput.value,
+            simulationElement.current
+          ) as string[];
+          const leftover =
+            unformattedLeftover[0] === '\n'
+              ? unformattedLeftover.slice(1)
+              : unformattedLeftover;
+          const lastInputData = pageData.data[pageData.data.length - 1];
+          console.log('text:', text, 'leftover:', leftover);
+          lastInputData.text = text;
+          lastInput.value = text;
+          stateSetter(text);
+          lastInput.style.height = 'auto';
+          lastInput.style.height = lastInput.scrollHeight + 'px';
+          entrantToBeMoved = { ...pageData.data[pageData.data.length - 1] };
+          entrantToBeMoved.text = leftover;
+          remainingExcess -= heightGoal;
+          if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
+            pages[thisPageNum + 1].data[0].text =
+              leftover + '\n' + pages[thisPageNum + 1].data[0].text;
+            entrantToBeMoved = undefined;
+          }
+        }
+      }
+      if (entrantToBeMoved) nextPage.data.unshift(entrantToBeMoved);
+    }
+    setPages([...pages]);
   }
 
   return (
@@ -378,6 +480,10 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
             );
         }
       })}
+      <textarea
+        rows={1}
+        className="absolute top-0 pointer-events-none px-[2px] resize-none overflow-hidden opacity-0"
+        ref={simulationElement}></textarea>
     </div>
   );
 }
@@ -406,4 +512,66 @@ function extractText(formPages: PageData[], keyWord: string) {
     }
   }
   return textArray;
+}
+
+function adjustInput(
+  heightGoal: number,
+  text: string,
+  element: HTMLTextAreaElement
+): string[] | undefined {
+  const recursiveTextSplitter = (
+    str,
+    leftover,
+    lengthOfSplit,
+    finalComparison
+  ): string[] | undefined => {
+    element.value = str;
+    element.style.height = 'auto';
+    element.style.height = element.scrollHeight + 'px';
+    if (element.scrollHeight > heightGoal) {
+      if (lengthOfSplit === 1) {
+        if (finalComparison) {
+          return undefined;
+        } else {
+          return [
+            str.slice(0, str.length - 1),
+            str.slice(str.length - 1) + leftover,
+          ];
+        }
+      }
+      return recursiveTextSplitter(
+        str.slice(0, str.length - Math.ceil(lengthOfSplit / 2)),
+        str.slice(str.length - Math.ceil(lengthOfSplit / 2)) + leftover,
+        Math.ceil(lengthOfSplit - lengthOfSplit / 2),
+        false
+      );
+    } else {
+      if (lengthOfSplit === 1) {
+        if (finalComparison) {
+          return [str, leftover];
+        } else {
+          return (
+            recursiveTextSplitter(
+              str + leftover.slice(0, 1),
+              leftover.slice(1),
+              1,
+              true
+            ) || [str, leftover]
+          );
+        }
+      }
+      return recursiveTextSplitter(
+        str + leftover.slice(0, Math.ceil(lengthOfSplit / 2)),
+        leftover.slice(Math.ceil(lengthOfSplit / 2)),
+        Math.ceil(lengthOfSplit - lengthOfSplit / 2),
+        false
+      );
+    }
+  };
+  return recursiveTextSplitter(
+    text.slice(0, text.length / 2),
+    text.slice(text.length / 2),
+    Math.ceil(text.length / 2),
+    false
+  );
 }
