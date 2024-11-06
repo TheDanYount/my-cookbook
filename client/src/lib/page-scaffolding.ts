@@ -1,11 +1,84 @@
 import { PageData } from '../components/Cookbook';
 import { authKey } from '../components/UserContext';
 
+function buildRecipeData(formattedResult) {
+  const recipePageDataArray: PageData[] = [];
+  for (const recipe of formattedResult) {
+    const ingredients = JSON.parse(recipe.ingredients);
+    const directions = JSON.parse(recipe.directions);
+    const notes = JSON.parse(recipe.notes);
+    const recipeId = recipe.recipeId;
+    let firstIngredients = true;
+    let firstDirections = true;
+    let firstNotes = true;
+    let usedImage = false;
+    for (let i = 0; i < recipe.length; i++) {
+      const newData: PageData['data'] = [];
+      if (i === 0) {
+        newData.push({
+          type: 'title',
+          text: recipe.title,
+          length: recipe.length,
+          id: recipeId,
+        });
+      }
+      if (
+        i === recipe.length - 1 &&
+        !usedImage &&
+        !ingredients[i] &&
+        recipe.imageUrl
+      ) {
+        newData.push({
+          type: 'img-and-ingredients',
+          text: '',
+          fileUrl: recipe.imageUrl,
+        });
+      } else if (ingredients[i] && !usedImage) {
+        usedImage = true;
+        newData.push({
+          type: 'img-and-ingredients',
+          text: ingredients[i],
+          fileUrl: recipe.imageUrl,
+          first: firstIngredients,
+        });
+        firstIngredients = false;
+      } else if (ingredients[i] && usedImage) {
+        newData.push({
+          type: 'ingredients',
+          text: ingredients[i],
+          first: firstIngredients,
+        });
+        firstIngredients = false;
+      }
+      if (directions[i]) {
+        newData.push({
+          type: 'directions',
+          text: directions[i],
+          first: firstDirections,
+        });
+        firstDirections = false;
+      }
+      if (notes[i]) {
+        newData.push({
+          type: 'notes',
+          text: notes[i],
+          first: firstNotes,
+        });
+        firstNotes = false;
+      }
+      recipePageDataArray.push({
+        type: 'recipe',
+        data: newData,
+      });
+    }
+  }
+  return recipePageDataArray;
+}
+
 export async function getRecipes(cookbookId) {
   try {
     const auth = localStorage.getItem(authKey);
     if (!auth) throw new Error('not properly logged in');
-    const recipePageDataArray: PageData[] = [];
     const result = await fetch(`/api/read-recipes/${cookbookId}`, {
       headers: {
         Authorization: `Bearer ${JSON.parse(auth).token}`,
@@ -13,54 +86,7 @@ export async function getRecipes(cookbookId) {
     });
     const formattedResult = await result.json();
     if (!result.ok) throw new Error(formattedResult.error);
-    for (const recipe of formattedResult) {
-      const ingredients = JSON.parse(recipe.ingredients);
-      const directions = JSON.parse(recipe.directions);
-      const notes = JSON.parse(recipe.notes);
-      const recipeId = recipe.recipeId;
-      let usedImage = false;
-      for (let i = 0; i < recipe.length; i++) {
-        const newData: PageData['data'] = [];
-        if (i === 0) {
-          newData.push({
-            type: 'title',
-            text: recipe.title,
-            length: recipe.length,
-            id: recipeId,
-          });
-        }
-        if (ingredients[i] && !usedImage) {
-          usedImage = true;
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-            fileUrl: recipe.imageUrl,
-          });
-        } else if (ingredients[i] && usedImage) {
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-          });
-        }
-        if (directions[i]) {
-          newData.push({
-            type: 'directions',
-            text: directions[i],
-          });
-        }
-        if (notes[i]) {
-          newData.push({
-            type: 'notes',
-            text: notes[i],
-          });
-        }
-        recipePageDataArray.push({
-          type: 'recipe',
-          data: newData,
-        });
-      }
-    }
-    return recipePageDataArray;
+    return buildRecipeData(formattedResult);
   } catch (err) {
     alert(err);
   }
@@ -70,7 +96,6 @@ export async function getRecipeById(cookbookId, recipeId) {
   try {
     const auth = localStorage.getItem(authKey);
     if (!auth) throw new Error('not properly logged in');
-    const recipePageDataArray: PageData[] = [];
     const result = await fetch(
       `/api/read-recipe-by-id/${cookbookId}/${recipeId}`,
       {
@@ -81,53 +106,7 @@ export async function getRecipeById(cookbookId, recipeId) {
     );
     const formattedResult = await result.json();
     if (!result.ok) throw new Error(formattedResult.error);
-    for (const recipe of formattedResult) {
-      const ingredients = JSON.parse(recipe.ingredients);
-      const directions = JSON.parse(recipe.directions);
-      const notes = JSON.parse(recipe.notes);
-      let usedImage = false;
-      for (let i = 0; i < recipe.length; i++) {
-        const newData: PageData['data'] = [];
-        if (i === 0) {
-          newData.push({
-            type: 'title',
-            text: recipe.title,
-            length: recipe.length,
-            id: recipe.recipeId,
-          });
-        }
-        if (ingredients[i] && !usedImage) {
-          usedImage = true;
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-            fileUrl: recipe.imageUrl,
-          });
-        } else if (ingredients[i] && usedImage) {
-          newData.push({
-            type: 'img-and-ingredients',
-            text: ingredients[i],
-          });
-        }
-        if (directions[i]) {
-          newData.push({
-            type: 'directions',
-            text: directions[i],
-          });
-        }
-        if (notes[i]) {
-          newData.push({
-            type: 'notes',
-            text: notes[i],
-          });
-        }
-        recipePageDataArray.push({
-          type: 'recipe',
-          data: newData,
-        });
-      }
-    }
-    return recipePageDataArray;
+    return buildRecipeData(formattedResult);
   } catch (err) {
     alert(err);
   }
@@ -175,14 +154,34 @@ export function addToToc(pages: PageData[], recipe) {
   }
 }
 
+export function updateToc(pages: PageData[], recipe) {
+  for (let i = 2; i < pages.length; i++) {
+    if (pages[i].type === 'toc') {
+      const oldEntryIndex = pages[i].data.findIndex(
+        (e) => e.id === recipe.recipeId
+      );
+      if (oldEntryIndex !== -1) {
+        pages[i].data.splice(oldEntryIndex, 1, {
+          type: 'recipe',
+          text: recipe.title,
+          pageNum: pages[i].data[oldEntryIndex].pageNum,
+          length: recipe.length,
+          id: recipe.recipeId,
+        });
+        break;
+      }
+    }
+  }
+}
+
 export function getRecipeForm() {
   return {
     type: 'recipeForm',
     data: [
       { type: 'title' },
-      { type: 'img-and-ingredients' },
-      { type: 'directions' },
-      { type: 'notes' },
+      { type: 'img-and-ingredients', first: true },
+      { type: 'directions', first: true },
+      { type: 'notes', first: true },
       { type: 'submit' },
     ],
   };
@@ -199,13 +198,59 @@ export function convertRecipeToForm(
   for (let i = 0; i < length; i++) {
     pagesToConvert.push(pages[pageNum + i]);
   }
-  const newPages = pagesToConvert.map((page) => {
+  let usedIngredients = false;
+  let usedDirections = false;
+  let usedNotes = false;
+  const newPages = pagesToConvert.map((page, mapIndex) => {
+    if (
+      !usedIngredients &&
+      page.data.find((e) => e.type === 'img-and-ingredients')
+    )
+      usedIngredients = true;
+    if (!usedDirections && page.data.find((e) => e.type === 'directions'))
+      usedDirections = true;
+    if (!usedNotes && page.data.find((e) => e.type === 'notes'))
+      usedNotes = true;
+    const dataToAdd: PageData['data'] = [];
+    for (let i = 0; i < page.data.length; i++) {
+      const type = page.data[i].type;
+      if (!usedIngredients) {
+        if (type === 'img-and-ingredients') {
+          usedIngredients = true;
+        } else if (type === 'directions' || type === 'notes') {
+          dataToAdd.push({ type: 'img-and-ingredients', first: true });
+          usedIngredients = true;
+        }
+      }
+      if (!usedDirections) {
+        if (type === 'directions') {
+          usedIngredients = true;
+        } else if (type === 'notes') {
+          dataToAdd.push({ type: 'directions', first: true });
+          usedDirections = true;
+        }
+      }
+      if (!usedNotes && type === 'notes') {
+        usedNotes = true;
+      }
+      dataToAdd.push(page.data[i]);
+      if (
+        i === page.data.length - 1 &&
+        mapIndex === pagesToConvert.length - 1
+      ) {
+        if (!usedIngredients)
+          dataToAdd.push({ type: 'img-and-ingredients', first: true });
+        if (!usedDirections)
+          dataToAdd.push({ type: 'directions', first: true });
+        if (!usedNotes) dataToAdd.push({ type: 'notes', first: true });
+        dataToAdd.push({ type: 'submit' });
+      }
+    }
     return {
       type: 'recipeForm',
-      data: page.data,
+      data: dataToAdd,
     };
   });
-  newPages[newPages.length - 1].data.push({ type: 'submit' });
   setPages([
     ...pages.slice(0, pageNum),
     ...newPages,

@@ -47,14 +47,6 @@ app.post(
         lastName,
         style,
       } = req.body;
-      const usernameCheckSql = `
-      select *
-      from "users"
-      where "username" = $1
-      `;
-      const usernameCheckResult = await db.query(usernameCheckSql, [username]);
-      if (usernameCheckResult.rows[0])
-        throw new ClientError(401, `username already exists`);
       const hashedPassword = await argon2.hash(password);
       const photoUrl = `/images/recipe-images/${req?.file?.filename}`;
       let sql;
@@ -94,8 +86,8 @@ app.post(
 app.post('/api/auth/sign-in', async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    if (!username) throw new ClientError(401, 'missing username');
-    if (!password) throw new ClientError(401, 'missing password');
+    if (!username) throw new ClientError(400, 'missing username');
+    if (!password) throw new ClientError(400, 'missing password');
     const sql = `
     select *
     from "users"
@@ -103,7 +95,7 @@ app.post('/api/auth/sign-in', async (req, res, next) => {
     `;
     const result = await db.query(sql, [username]);
     const user = result.rows[0];
-    if (!user) throw new ClientError(401, 'user not found');
+    if (!user) throw new ClientError(404, 'user not found');
     const isAuthorized = await argon2.verify(user.password, password);
     if (!isAuthorized) {
       throw new ClientError(401, 'invalid credentials');
@@ -361,6 +353,7 @@ app.put(
       // Remove once form is updated
       const isPublic = false;
       let sql;
+      let params;
       if (imageState) {
         sql = `
     update "recipes"
@@ -369,28 +362,41 @@ app.put(
     where ("cookbookId" = $1 AND "recipeId" = $2)
     returning *;
     `;
+        params = [
+          cookbookId,
+          recipeId,
+          title,
+          imageUrl,
+          isFavorite,
+          ingredients,
+          directions,
+          notes,
+          order,
+          length,
+          isPublic,
+        ];
       } else {
         sql = `
     update "recipes"
-    set "title" = $3, "isFavorite" = $5, "ingredients" = $6,
-    "directions" = $7, "notes" = $8, "order" = $9, "length" = $10, "isPublic" = $11
+    set "title" = $3, "isFavorite" = $4, "ingredients" = $5,
+    "directions" = $6, "notes" = $7, "order" = $8, "length" = $9, "isPublic" = $10
     where ("cookbookId" = $1 AND "recipeId" = $2)
     returning *;
     `;
+        params = [
+          cookbookId,
+          recipeId,
+          title,
+          isFavorite,
+          ingredients,
+          directions,
+          notes,
+          order,
+          length,
+          isPublic,
+        ];
       }
-      const result = await db.query(sql, [
-        cookbookId,
-        recipeId,
-        title,
-        imageUrl,
-        isFavorite,
-        ingredients,
-        directions,
-        notes,
-        order,
-        length,
-        isPublic,
-      ]);
+      const result = await db.query(sql, params);
       if (!result.rows[0]) throw new ClientError(404, `Recipe not found`);
       res.status(200).json(result.rows[0]);
     } catch (err) {

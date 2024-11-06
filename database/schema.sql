@@ -9,7 +9,7 @@ create schema "public";
 CREATE TABLE "users" (
   "userId" serial PRIMARY KEY,
   "photoUrl" text,
-  "username" text,
+  "username" text UNIQUE,
   "password" text,
   "email" text,
   "firstName" text,

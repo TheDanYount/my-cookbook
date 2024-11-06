@@ -16,6 +16,7 @@ export type PageData = {
     pageNum?: number;
     length?: number;
     id?: number;
+    first?: boolean;
   }[];
 };
 
@@ -80,6 +81,7 @@ export function Cookbook() {
 
   function handlePageTurn(number) {
     if (!pageNum) return;
+    if (number === 2 && +pageNum === pages.length - 2) number -= 1;
     navigate(`/cookbook/${cookbook?.cookbookId}/page/${+pageNum + number}`);
   }
 

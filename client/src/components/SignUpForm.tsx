@@ -51,7 +51,15 @@ export function SignUpForm() {
         body: data,
       });
       const formattedResult = await result.json();
-      if (!result.ok) throw new Error(formattedResult.error);
+
+      if (!result.ok) {
+        if (
+          formattedResult.message ===
+          'duplicate key value violates unique constraint "users_username_key"'
+        )
+          throw new Error('username already exists');
+        throw new Error(formattedResult.error);
+      }
       const req = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

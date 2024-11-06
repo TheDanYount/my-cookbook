@@ -1,30 +1,67 @@
 import { useNavigate } from 'react-router-dom';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { IndividualPageProps } from './Page';
 import { PageData } from './Cookbook';
-import { addToToc, getRecipeById } from '../lib/page-scaffolding';
+import { addToToc, updateToc, getRecipeById } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
 import { FaTrash } from 'react-icons/fa';
 import { authKey } from './UserContext';
+import React from 'react';
 
 export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
   const { cookbook } = useContext(CookbookContext);
   const cookbookId = cookbook?.cookbookId;
   const imgStore = pageData.data.find((e) => e.type === 'img-and-ingredients');
+  const [title, setTitle] = useState(
+    pageData.data.find((e) => e.type === 'title')?.text || ''
+  );
+  const [ingredients, setIngredients] = useState(
+    pageData.data.find((e) => e.type === 'img-and-ingredients')?.text ||
+      pageData.data.find((e) => e.type === 'ingredients')?.text ||
+      ''
+  );
+  const [directions, setDirections] = useState(
+    pageData.data.find((e) => e.type === 'directions')?.text || ''
+  );
+  const [notes, setNotes] = useState(
+    pageData.data.find((e) => e.type === 'notes')?.text || ''
+  );
   const [imgUrl, setImgUrl] = useState<string>();
+  const titleElement = useRef<HTMLTextAreaElement>(null);
+  const ingredientsElement = useRef<HTMLTextAreaElement>(null);
+  const directionsElement = useRef<HTMLTextAreaElement>(null);
+  const notesElement = useRef<HTMLTextAreaElement>(null);
   const navigate = useNavigate();
   let keyCount = -1;
-  const currentPage = pages.findIndex((e) => e === pageData);
-  const [, setRerender] = useState<object>();
 
   useEffect(() => {
     setImgUrl(imgStore?.fileUrl);
   }, [imgStore?.fileUrl]);
 
+  useEffect(() => {
+    if (!titleElement.current) return;
+    titleElement.current.style.height =
+      titleElement.current.scrollHeight + 'px';
+  }, [titleElement]);
+  useEffect(() => {
+    if (!ingredientsElement.current) return;
+    ingredientsElement.current.style.height =
+      ingredientsElement.current.scrollHeight + 'px';
+  }, [ingredientsElement]);
+  useEffect(() => {
+    if (!directionsElement.current) return;
+    directionsElement.current.style.height =
+      directionsElement.current.scrollHeight + 'px';
+  }, [directionsElement]);
+  useEffect(() => {
+    if (!notesElement.current) return;
+    notesElement.current.style.height =
+      notesElement.current.scrollHeight + 'px';
+  }, [notesElement]);
+
   async function imgPreview(file, data) {
     data.fileChanged = true;
     if (!file) {
-      setImgUrl(undefined);
       data.file = undefined;
       data.fileUrl = undefined;
       return;
@@ -53,7 +90,10 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
     const title = formPages[0].data[0].text as string;
     data.append('cookbookId', String(cookbookId));
     data.append('title', title);
-    const ingredients = extractText(formPages, 'img-and-ingredients'); // An array
+    const ingredients = [
+      ...extractText(formPages, 'ingredients'),
+      ...extractText(formPages, 'img-and-ingredients'),
+    ]; // An array
     data.append('ingredients', JSON.stringify(ingredients));
     const directions = extractText(formPages, 'directions'); // An array
     data.append('directions', JSON.stringify(directions));
@@ -97,6 +137,7 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
           ...newRecipePages
         );
         setPages(pages);
+        updateToc(pages, formattedResult);
         navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
       } catch (err) {
         alert(err);
@@ -134,6 +175,11 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
       }
     }
   }
+
+  function checkPageEnd() {
+    console.log('hi');
+  }
+
   return (
     <div className="text-xs px-[10px]">
       {pageData.data.map((e) => {
@@ -143,22 +189,29 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
             return (
               <textarea
                 name="title"
-                className={`block text-center text-base w-full resize-none mb-1 bg-[#ffffff88]`}
+                rows={1}
+                className={`block text-center text-base w-full resize-none
+                  py-[12px] bg-[#ffffff88] h-[40px] overflow-hidden
+                  leading-[16px] cols`}
                 placeholder="[Input title here]"
+                ref={titleElement}
                 onChange={(event) => {
-                  setRerender({});
-                  return (e.text = event.currentTarget.value);
+                  e.text = event.target.value;
+                  setTitle(event.target.value);
+                  const beforeHeight = event.target.style.height;
+                  event.target.style.height = 'auto';
+                  event.target.style.height = event.target.scrollHeight + 'px';
+                  const afterHeight = event.target.style.height;
+                  if (beforeHeight !== afterHeight) checkPageEnd();
                 }}
-                value={e.text}
-                key={`page:${currentPage},key:${keyCount}`}></textarea>
+                value={title}
+                key={`key:${keyCount}`}></textarea>
             );
           case 'img-and-ingredients':
             return (
-              <div
-                className="relative flex my-[-4px]"
-                key={`page:${currentPage},key:${keyCount}`}>
+              <div className="relative flex" key={`key:${keyCount}`}>
                 <label
-                  className={`basis-[120px] h-[120px] my-1 ${
+                  className={`basis-[120px] h-[120px] ${
                     imgUrl ? 'bg-[#ffffff00]' : 'bg-[#ffffff88]'
                   } text-xs text-center text-[#9CA3AF]`}>
                   {imgUrl ? (
@@ -197,69 +250,129 @@ export function RecipeForm({ pageData, pages, setPages }: IndividualPageProps) {
                     </div>
                   </div>
                 )}
-                <textarea
-                  name="ingredients"
-                  placeholder="[Input ingredients here]"
-                  className={`block basis-[141px] px-[2px] self-stretch resize-none my-1 bg-[#ffffff88]`}
-                  style={{ fontSize: '12px' }}
-                  onChange={(event) => {
-                    setRerender({});
-                    return (e.text = event.currentTarget.value);
-                  }}
-                  value={e.text}></textarea>
+                <div className="basis-[141px] pl-[2px] self-stretch">
+                  {e.first && (
+                    <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                      Ingredients
+                    </h2>
+                  )}
+                  <textarea
+                    name="ingredients"
+                    rows={1}
+                    className={`w-full resize-none bg-[#ffffff88] overflow-hidden`}
+                    placeholder="[Input ingredients here]"
+                    style={{ fontSize: '14px' }}
+                    ref={ingredientsElement}
+                    onChange={(event) => {
+                      e.text = event.target.value;
+                      setIngredients(event.target.value);
+                      const beforeHeight = event.target.style.height;
+                      event.target.style.height = 'auto';
+                      event.target.style.height =
+                        event.target.scrollHeight + 'px';
+                      const afterHeight = event.target.style.height;
+                      if (beforeHeight !== afterHeight) checkPageEnd();
+                    }}
+                    value={ingredients}></textarea>
+                </div>
               </div>
             );
           case 'ingredients':
             return (
               <div
                 className="flex justify-end my-[-4px]"
-                key={`page:${currentPage},key:${keyCount}`}>
-                <textarea
-                  name="ingredients"
-                  placeholder="[Input ingredients here]"
-                  className={`block basis-[151px] px-[2px] resize-none my-1 bg-[#ffffff88]`}
-                  style={{ fontSize: '12px' }}
-                  onChange={(event) => {
-                    setRerender({});
-                    return (e.text = event.currentTarget.value);
-                  }}
-                  value={e.text}></textarea>
+                key={`key:${keyCount}`}>
+                <div className="basis-[141px] pl-[2px] self-stretch my-1">
+                  {e.first && (
+                    <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                      Ingredients
+                    </h2>
+                  )}
+                  <textarea
+                    name="ingredients"
+                    rows={1}
+                    className={`w-full resize-none bg-[#ffffff88] overflow-hidden`}
+                    placeholder="[Input ingredients here]"
+                    style={{ fontSize: '14px' }}
+                    ref={ingredientsElement}
+                    onChange={(event) => {
+                      e.text = event.target.value;
+                      setIngredients(event.target.value);
+                      const beforeHeight = event.target.style.height;
+                      event.target.style.height = 'auto';
+                      event.target.style.height =
+                        event.target.scrollHeight + 'px';
+                      const afterHeight = event.target.style.height;
+                      if (beforeHeight !== afterHeight) checkPageEnd();
+                    }}
+                    value={ingredients}></textarea>
+                </div>
               </div>
             );
           case 'directions':
             return (
-              <textarea
-                name="directions"
-                placeholder="[Input directions here]"
-                className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
-                style={{ fontSize: '12px' }}
-                onChange={(event) => {
-                  setRerender({});
-                  return (e.text = event.currentTarget.value);
-                }}
-                value={e.text}
-                key={`page:${currentPage},key:${keyCount}`}></textarea>
+              <React.Fragment key={`key:${keyCount}`}>
+                {e.first && (
+                  <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                    Directions
+                  </h2>
+                )}
+                <textarea
+                  name="directions"
+                  rows={1}
+                  className={`block w-full px-[2px] resize-none bg-[#ffffff88]
+                    overflow-hidden`}
+                  placeholder="[Input directions here]"
+                  style={{ fontSize: '14px' }}
+                  ref={directionsElement}
+                  onChange={(event) => {
+                    e.text = event.target.value;
+                    setDirections(event.target.value);
+                    const beforeHeight = event.target.style.height;
+                    event.target.style.height = 'auto';
+                    event.target.style.height =
+                      event.target.scrollHeight + 'px';
+                    const afterHeight = event.target.style.height;
+                    if (beforeHeight !== afterHeight) checkPageEnd();
+                  }}
+                  value={directions}></textarea>
+              </React.Fragment>
             );
           case 'notes':
             return (
-              <textarea
-                name="notes"
-                placeholder="[Input notes here]"
-                className={`block w-full px-[2px] resize-none my-1 bg-[#ffffff88]`}
-                style={{ fontSize: '12px' }}
-                onChange={(event) => {
-                  setRerender({});
-                  return (e.text = event.currentTarget.value);
-                }}
-                value={e.text}
-                key={`page:${currentPage},key:${keyCount}`}></textarea>
+              <React.Fragment key={`key:${keyCount}`}>
+                {e.first && (
+                  <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                    Notes
+                  </h2>
+                )}
+                <textarea
+                  name="notes"
+                  rows={1}
+                  className={`block w-full px-[2px] resize-none bg-[#ffffff88]
+                    overflow-hidden`}
+                  placeholder="[Input notes here]"
+                  value={notes}
+                  style={{ fontSize: '14px' }}
+                  ref={notesElement}
+                  onChange={(event) => {
+                    e.text = event.target.value;
+                    setNotes(event.target.value);
+                    const beforeHeight = event.target.style.height;
+                    event.target.style.height = 'auto';
+                    event.target.style.height =
+                      event.target.scrollHeight + 'px';
+                    const afterHeight = event.target.style.height;
+                    if (beforeHeight !== afterHeight) checkPageEnd();
+                  }}></textarea>
+              </React.Fragment>
             );
           case 'submit':
             return (
               <button
                 className="block underline mx-auto text-base hover:scale-110"
                 onClick={handlePsuedoSubmit}
-                key={`page:${currentPage},key:${keyCount}`}>
+                key={`key:${keyCount}`}>
                 Submit
               </button>
             );
@@ -284,23 +397,12 @@ function extractImage(formPages: PageData[]) {
 
 function extractText(formPages: PageData[], keyWord: string) {
   const textArray: string[] = [];
-  if (keyWord === 'img-and-ingredients') {
-    for (const formPage of formPages) {
-      const keyInput = formPage.data.find(
-        (element) => element.type === keyWord
-      );
-      if (keyInput?.text) {
-        textArray.push(keyInput.text);
-      } else textArray.push('');
-    }
-  } else {
-    for (const formPage of formPages) {
-      const keyInput = formPage.data.find(
-        (element) => element.type === keyWord
-      );
-      if (keyInput?.text) {
-        textArray.push(keyInput.text);
-      } else textArray.push('');
+  for (const formPage of formPages) {
+    const keyInput = formPage.data.find((element) => element.type === keyWord);
+    if (keyInput?.text) {
+      textArray.push(keyInput.text);
+    } else {
+      if (!(keyWord === 'ingredients')) textArray.push('');
     }
   }
   return textArray;
