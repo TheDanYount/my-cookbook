@@ -53,7 +53,12 @@ export function Page({
         <Recipe pageData={pageData} pages={pages} setPages={setPages} />
       )}
       {pageData.type === 'recipeForm' && (
-        <RecipeForm pageData={pageData} pages={pages} setPages={setPages} />
+        <RecipeForm
+          pageData={pageData}
+          pages={pages}
+          setPages={setPages}
+          thisPageNum={thisPageNum}
+        />
       )}
       <div className="flex w-full text-[14px] self-center">
         <div className="basis-[40px] grow text-right">

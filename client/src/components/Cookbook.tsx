@@ -5,19 +5,21 @@ import { useWindowDimensions } from '../lib/window-dimensions';
 import { buildToc, getRecipes } from '../lib/page-scaffolding';
 import { CookbookContext } from './CookbookContext';
 
+export type Entrant = {
+  type: string;
+  text?: string;
+  file?: undefined | Blob;
+  fileUrl?: string;
+  fileChanged?: boolean;
+  pageNum?: number;
+  length?: number;
+  id?: number;
+  first?: boolean;
+};
+
 export type PageData = {
   type: string;
-  data: {
-    type: string;
-    text?: string;
-    file?: undefined | Blob;
-    fileUrl?: string;
-    fileChanged?: boolean;
-    pageNum?: number;
-    length?: number;
-    id?: number;
-    first?: boolean;
-  }[];
+  data: Entrant[];
 };
 
 const zerothPagePlaceholder = { type: '', data: [] };
