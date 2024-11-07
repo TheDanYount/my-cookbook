@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useContext, useEffect, useState, useRef } from 'react';
+import { useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { IndividualPageProps } from './Page';
 import { Entrant, PageData } from './Cookbook';
 import { addToToc, updateToc, getRecipeById } from '../lib/page-scaffolding';
@@ -71,6 +71,35 @@ export function RecipeForm({
     notesElement.current.style.height =
       notesElement.current.scrollHeight + 'px';
   }, [notesElement]);
+
+  useEffect(() => {
+    const newIngredients =
+      pageData.data.find((e) => e.type === 'img-and-ingredients')?.text ||
+      pageData.data.find((e) => e.type === 'ingredients')?.text ||
+      '';
+    setIngredients(newIngredients);
+    if (!ingredientsElement.current) return;
+    ingredientsElement.current.value = newIngredients;
+    ingredientsElement.current.style.height = 'auto';
+    ingredientsElement.current.style.height =
+      ingredientsElement.current.scrollHeight + 'px';
+    const newDirections =
+      pageData.data.find((e) => e.type === 'directions')?.text || '';
+
+    setDirections(newDirections);
+    if (!directionsElement.current) return;
+    directionsElement.current.value = newDirections;
+    directionsElement.current.style.height = 'auto';
+    directionsElement.current.style.height =
+      directionsElement.current.scrollHeight + 'px';
+    const newNotes = pageData.data.find((e) => e.type === 'notes')?.text || '';
+    setNotes(newNotes);
+    if (!notesElement.current) return;
+    notesElement.current.value = newNotes;
+    notesElement.current.style.height = 'auto';
+    notesElement.current.style.height =
+      notesElement.current.scrollHeight + 'px';
+  }, [pages, pageData.data]);
 
   async function imgPreview(file, data) {
     data.fileChanged = true;
@@ -189,7 +218,7 @@ export function RecipeForm({
     }
   }
 
-  function checkPageEnd() {
+  const checkPageEnd = useCallback(() => {
     const lastInput =
       notesElement.current ||
       directionsElement.current ||
@@ -216,7 +245,7 @@ export function RecipeForm({
         : lastInput === ingredientsElement.current
         ? setIngredients
         : setNotes;
-    // The following means if the next page isn't part of this form
+    // The following line means if the next page isn't part of this form
     if (
       !(
         pages[thisPageNum + 1]?.type === 'recipeForm' &&
@@ -245,11 +274,10 @@ export function RecipeForm({
           entrantToBeMoved = pageData.data.pop() as Entrant;
           remainingExcess -= lastInputRect.height;
           if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
-            pages[thisPageNum + 1].data[0].text =
+            entrantToBeMoved.text =
               entrantToBeMoved.text +
               '\n' +
               pages[thisPageNum + 1].data[0].text;
-            entrantToBeMoved = undefined;
           } else if (
             entrantToBeMoved.type === 'img-and-ingredients' &&
             pages[thisPageNum + 1].data[0].type === 'ingredients'
@@ -293,12 +321,26 @@ export function RecipeForm({
               leftover + '\n' + pages[thisPageNum + 1].data[0].text;
             entrantToBeMoved = undefined;
           }
+          pages[thisPageNum + 1].data = [...pages[thisPageNum + 1].data];
         }
       }
       if (entrantToBeMoved) nextPage.data.unshift(entrantToBeMoved);
     }
+    /*
+    const newPages = pages;
+    for (let j = 0; j < pages.length; j++) {
+      const page = pages[j];
+      for (let i = 0; i < page.data.length; i++) {
+        page.data[i] = { ...page.data[i] };
+      }
+      pages[j] = { ...pages[j] };
+    }
+    setPages([...newPages]);
+    */
     setPages([...pages]);
-  }
+  }, [pageData, pages, setPages, thisPageNum]);
+
+  useEffect(() => checkPageEnd(), [checkPageEnd]);
 
   return (
     <div className="text-xs px-[10px]">
