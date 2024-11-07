@@ -198,7 +198,7 @@ export function RecipeForm({
     if (!lastInput) return;
     if (!simulationElement.current) return;
     const lastInputRect = lastInput?.getBoundingClientRect();
-    const isSubmitPresent =
+    let isSubmitPresent =
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
     const functionalBottom =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
@@ -234,8 +234,14 @@ export function RecipeForm({
       if (isSubmitPresent) {
         entrantToBeMoved = pageData.data.pop() as Entrant;
         remainingExcess -= submitHeight;
+        isSubmitPresent = false;
       } else {
-        if (lastInputRect.height < remainingExcess + lineHeight) {
+        if (
+          lastInputRect.height < remainingExcess + lineHeight ||
+          (pageData.data[pageData.data.length - 1].type ===
+            'img-and-ingredients' &&
+            lastInputRect.height < 120)
+        ) {
           entrantToBeMoved = pageData.data.pop() as Entrant;
           remainingExcess -= lastInputRect.height;
           if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
@@ -244,13 +250,22 @@ export function RecipeForm({
               '\n' +
               pages[thisPageNum + 1].data[0].text;
             entrantToBeMoved = undefined;
+          } else if (
+            entrantToBeMoved.type === 'img-and-ingredients' &&
+            pages[thisPageNum + 1].data[0].type === 'ingredients'
+          ) {
+            entrantToBeMoved.text =
+              entrantToBeMoved.text +
+              '\n' +
+              pages[thisPageNum + 1].data[0].text;
+            pages[thisPageNum + 1].data.shift();
           }
         } else {
           simulationElement.current.style.width = lastInputRect.width + 'px';
           const heightGoal =
+            1 +
             lineHeight *
-            Math.floor((lastInputRect.height - remainingExcess) / lineHeight);
-          console.log('input value:', lastInput.value);
+              Math.floor((lastInputRect.height - remainingExcess) / lineHeight);
           const [text, unformattedLeftover] = adjustInput(
             heightGoal,
             lastInput.value,
@@ -261,13 +276,16 @@ export function RecipeForm({
               ? unformattedLeftover.slice(1)
               : unformattedLeftover;
           const lastInputData = pageData.data[pageData.data.length - 1];
-          console.log('text:', text, 'leftover:', leftover);
           lastInputData.text = text;
           lastInput.value = text;
           stateSetter(text);
           lastInput.style.height = 'auto';
           lastInput.style.height = lastInput.scrollHeight + 'px';
-          entrantToBeMoved = { ...pageData.data[pageData.data.length - 1] };
+          entrantToBeMoved =
+            pageData.data[pageData.data.length - 1].type ===
+            'img-and-ingredients'
+              ? { type: 'ingredients' }
+              : { ...pageData.data[pageData.data.length - 1] };
           entrantToBeMoved.text = leftover;
           remainingExcess -= heightGoal;
           if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
@@ -483,6 +501,7 @@ export function RecipeForm({
       <textarea
         rows={1}
         className="absolute top-0 pointer-events-none px-[2px] resize-none overflow-hidden opacity-0"
+        style={{ fontSize: '14px' }}
         ref={simulationElement}></textarea>
     </div>
   );
