@@ -326,17 +326,6 @@ export function RecipeForm({
       }
       if (entrantToBeMoved) nextPage.data.unshift(entrantToBeMoved);
     }
-    /*
-    const newPages = pages;
-    for (let j = 0; j < pages.length; j++) {
-      const page = pages[j];
-      for (let i = 0; i < page.data.length; i++) {
-        page.data[i] = { ...page.data[i] };
-      }
-      pages[j] = { ...pages[j] };
-    }
-    setPages([...newPages]);
-    */
     setPages([...pages]);
   }, [pageData, pages, setPages, thisPageNum]);
 
