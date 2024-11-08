@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 export function CookbookForm() {
   const [title, setTitle] = useState<string>('');
-  const [titleColor, setTitleColor] = useState('#ffffff');
-  const [bgColor, setBgColor] = useState('#4C301E');
+  const [titleColor, setTitleColor] = useState('#FFBF00');
+  const [bgColor, setBgColor] = useState('#825134');
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
