@@ -86,13 +86,12 @@ export function HomePage() {
               className={`flex gap-[10px] ${
                 carouselTeleports ||
                 'transition-[margin-left] duration-[250ms] ease-in-out'
-              }`}
+              } ${cookbooks.length < visibleCookbooks && 'justify-center'}`}
               style={{
                 marginLeft: `${
-                  28 +
-                  (cookbooks.length >= visibleCookbooks
-                    ? (carouselIndex + 1 + cookbooks.length) * -160
-                    : 0)
+                  cookbooks.length < visibleCookbooks
+                    ? 0
+                    : 28 + (carouselIndex + 1 + cookbooks.length) * -160
                 }px`,
               }}>
               {cookbooks.length >= visibleCookbooks && (
