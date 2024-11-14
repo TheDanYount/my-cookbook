@@ -37,6 +37,7 @@ export function Cookbook() {
   const [smallScreenShift, setSmallScreenShift] = useState(width < 660);
 
   useEffect(() => {
+    console.log('cookbook changed');
     if (!cookbook || !cookbookId || cookbook?.cookbookId !== +cookbookId)
       return;
     async function setup() {
