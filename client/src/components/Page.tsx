@@ -42,12 +42,7 @@ export function Page({
         <TitlePage title={pageData.data[0].text || ''} />
       )}
       {pageData.type === 'toc' && (
-        <ToC
-          pageData={pageData}
-          pages={pages}
-          setPages={setPages}
-          onPageTurn={onPageTurn}
-        />
+        <ToC pageData={pageData} pages={pages} setPages={setPages} />
       )}
       {pageData.type === 'recipe' && (
         <Recipe pageData={pageData} pages={pages} setPages={setPages} />
