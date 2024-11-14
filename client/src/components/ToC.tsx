@@ -1,16 +1,12 @@
 import { useState, useRef, Fragment, useContext } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getRecipeForm, deleteRecipe } from '../lib/page-scaffolding';
 import { IndividualPageProps } from './Page';
 import { ToCEntry } from './ToCEntry';
 import { DeleteConfirm } from './DeleteConfirm';
 import { CookbookContext } from './CookbookContext';
 import { authKey } from './UserContext';
-
-type tocIndividualPageProps = IndividualPageProps & {
-  onPageTurn: (num) => void;
-};
 
 type entry = {
   text: string;
@@ -19,12 +15,7 @@ type entry = {
   id: number;
 };
 
-export function ToC({
-  pageData,
-  pages,
-  setPages,
-  onPageTurn,
-}: tocIndividualPageProps) {
+export function ToC({ pageData, pages, setPages }: IndividualPageProps) {
   let keyCount = -1;
   const { pageNum } = useParams();
   const { cookbook, setCookbook } = useContext(CookbookContext);
@@ -35,6 +26,7 @@ export function ToC({
   const [deleteConfirmId, setDeleteConfirmId] = useState<number>();
   const tocParentDiv = useRef<HTMLDivElement | null>(null);
   const page = tocParentDiv?.current?.parentNode;
+  const navigate = useNavigate();
 
   const handlePointerMove = (event) => {
     if (!pageNum) return;
@@ -86,8 +78,7 @@ export function ToC({
 
   function handleNewRecipe() {
     setPages([...pages, getRecipeForm()]);
-    if (!pageNum) return;
-    onPageTurn(pages.length - +pageNum);
+    navigate(`/cookbook/${cookbook?.cookbookId}/page/${pages.length}`);
   }
 
   function handleDeleteClick(id) {
@@ -149,10 +140,10 @@ export function ToC({
                     placementOnPage={keyCount}
                     onPointerMove={handlePointerMove}
                     onPointerDown={handlePointerDown}
-                    onPageTurn={onPageTurn}
                     pages={pages}
                     setPages={setPages}
                     onDelete={handleDeleteClick}
+                    cookbookId={cookbook?.cookbookId ?? 1}
                   />
                   {deleteConfirmId &&
                     deleteConfirmId === e.id &&
