@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { RxCaretSort } from 'react-icons/rx';
 import { FaPencilAlt, FaTrash } from 'react-icons/fa';
 import { convertRecipeToForm } from '../lib/page-scaffolding';
@@ -9,10 +9,10 @@ type TocEntryProps = {
   placementOnPage: number;
   onPointerMove: (event) => void;
   onPointerDown: (event) => void;
-  onPageTurn: (number) => void;
   pages: PageData[];
   setPages: (pages: PageData[]) => void;
   onDelete: (id: number) => void;
+  cookbookId: number;
 };
 
 export function ToCEntry({
@@ -20,17 +20,18 @@ export function ToCEntry({
   placementOnPage,
   onPointerMove,
   onPointerDown,
-  onPageTurn,
   pages,
   setPages,
   onDelete,
+  cookbookId,
 }: TocEntryProps) {
   const { pageNum: currentPage } = useParams();
   const { pageNum, text, length, id } = entry;
+  const navigate = useNavigate();
 
   function handleRecipeNavigation() {
     if (!currentPage) return;
-    onPageTurn(pageNum - +currentPage);
+    navigate(`/cookbook/${cookbookId}/page/${pageNum}`);
   }
 
   function handleEdit() {

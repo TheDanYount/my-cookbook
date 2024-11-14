@@ -51,29 +51,6 @@ export function RecipeForm({
     setImgUrl(imgStore?.fileUrl);
   }, [imgStore?.fileUrl]);
 
-  /*
-  useEffect(() => {
-    if (!titleElement.current) return;
-    titleElement.current.style.height =
-      titleElement.current.scrollHeight + 'px';
-  }, [titleElement]);
-  useEffect(() => {
-    if (!ingredientsElement.current) return;
-    ingredientsElement.current.style.height =
-      ingredientsElement.current.scrollHeight + 'px';
-  }, [ingredientsElement]);
-  useEffect(() => {
-    if (!directionsElement.current) return;
-    directionsElement.current.style.height =
-      directionsElement.current.scrollHeight + 'px';
-  }, [directionsElement]);
-  useEffect(() => {
-    if (!notesElement.current) return;
-    notesElement.current.style.height =
-      notesElement.current.scrollHeight + 'px';
-  }, [notesElement]);
-  */
-
   useEffect(() => {
     const newIngredients =
       pageData.data.find((e) => e.type === 'img-and-ingredients')?.text ||
@@ -120,7 +97,9 @@ export function RecipeForm({
   }
 
   async function handlePsuedoSubmit() {
-    const endOfForm = pages.findIndex((e) => e === pageData);
+    const thisPageIndex = pages.findIndex((e) => e === pageData);
+    const endOfForm =
+      pageData.data[0].type === 'submit' ? thisPageIndex - 1 : thisPageIndex;
     let startOfForm;
     for (let i = endOfForm; i > 0; i--) {
       if (pages[i].type === 'recipeForm') {
@@ -183,6 +162,8 @@ export function RecipeForm({
           endOfForm + 1 - startOfForm,
           ...newRecipePages
         );
+        if (pageData.data[0].type === 'submit')
+          pages.splice(pages.length - 1, 1);
         setPages(pages);
         updateToc(pages, formattedResult);
         navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
@@ -214,6 +195,8 @@ export function RecipeForm({
           endOfForm + 1 - startOfForm,
           ...newRecipePages
         );
+        if (pageData.data[0].type === 'submit')
+          pages.splice(pages.length - 1, 1);
         setPages(pages);
         addToToc(pages, formattedResult);
         navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
