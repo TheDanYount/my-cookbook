@@ -27,7 +27,7 @@ export function ToC({
 }: tocIndividualPageProps) {
   let keyCount = -1;
   const { pageNum } = useParams();
-  const { cookbook } = useContext(CookbookContext);
+  const { cookbook, setCookbook } = useContext(CookbookContext);
   const cookbookId = cookbook?.cookbookId;
   const currentPage = pages.findIndex((e) => e === pageData);
   const [isPointerDown, setIsPointerDown] = useState(false);
@@ -50,14 +50,8 @@ export function ToC({
           setEntryToMove(currentTarget);
           reOrderTocEntries(pDDataCopy);
           const pagesCopy = pages.slice();
-          pagesCopy.splice(movingToPos + 2, 1, pages[movingFromPos + 2]);
-          pagesCopy.splice(movingFromPos + 2, 1, pages[movingToPos + 2]);
-          const newPages = [
-            ...pages.slice(0, 2),
-            { type: 'toc', data: pDDataCopy },
-            ...pagesCopy.slice(3),
-          ];
-          setPages(newPages);
+          pagesCopy.splice(2, 1, { type: 'toc', data: pDDataCopy });
+          setPages(pagesCopy);
         }
       }
     }
@@ -75,7 +69,9 @@ export function ToC({
       setIsPointerDown(false);
       reOrderRecipes(
         pages[2].data.filter((e) => e.type === 'recipe'),
-        cookbookId
+        cookbookId,
+        cookbook,
+        setCookbook
       );
     }
   }
@@ -201,7 +197,7 @@ function reOrderTocEntries(data) {
   return data;
 }
 
-async function reOrderRecipes(data, cookbookId) {
+async function reOrderRecipes(data, cookbookId, cookbook, setCookbook) {
   for (let i = 0; i < data.length; i++) {
     try {
       const auth = localStorage.getItem(authKey);
@@ -219,6 +215,7 @@ async function reOrderRecipes(data, cookbookId) {
       );
       const formattedResult = await result.json();
       if (!result.ok) throw new Error(formattedResult.error);
+      setCookbook({ ...cookbook });
     } catch (err) {
       alert(err);
     }

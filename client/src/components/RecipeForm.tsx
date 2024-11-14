@@ -51,6 +51,7 @@ export function RecipeForm({
     setImgUrl(imgStore?.fileUrl);
   }, [imgStore?.fileUrl]);
 
+  /*
   useEffect(() => {
     if (!titleElement.current) return;
     titleElement.current.style.height =
@@ -71,6 +72,7 @@ export function RecipeForm({
     notesElement.current.style.height =
       notesElement.current.scrollHeight + 'px';
   }, [notesElement]);
+  */
 
   useEffect(() => {
     const newIngredients =
@@ -78,27 +80,30 @@ export function RecipeForm({
       pageData.data.find((e) => e.type === 'ingredients')?.text ||
       '';
     setIngredients(newIngredients);
-    if (!ingredientsElement.current) return;
-    ingredientsElement.current.value = newIngredients;
-    ingredientsElement.current.style.height = 'auto';
-    ingredientsElement.current.style.height =
-      ingredientsElement.current.scrollHeight + 'px';
+    if (ingredientsElement.current) {
+      ingredientsElement.current.value = newIngredients;
+      ingredientsElement.current.style.height = 'auto';
+      ingredientsElement.current.style.height =
+        ingredientsElement.current.scrollHeight + 'px';
+    }
     const newDirections =
       pageData.data.find((e) => e.type === 'directions')?.text || '';
 
     setDirections(newDirections);
-    if (!directionsElement.current) return;
-    directionsElement.current.value = newDirections;
-    directionsElement.current.style.height = 'auto';
-    directionsElement.current.style.height =
-      directionsElement.current.scrollHeight + 'px';
+    if (directionsElement.current) {
+      directionsElement.current.value = newDirections;
+      directionsElement.current.style.height = 'auto';
+      directionsElement.current.style.height =
+        directionsElement.current.scrollHeight + 'px';
+    }
     const newNotes = pageData.data.find((e) => e.type === 'notes')?.text || '';
     setNotes(newNotes);
-    if (!notesElement.current) return;
-    notesElement.current.value = newNotes;
-    notesElement.current.style.height = 'auto';
-    notesElement.current.style.height =
-      notesElement.current.scrollHeight + 'px';
+    if (notesElement.current) {
+      notesElement.current.value = newNotes;
+      notesElement.current.style.height = 'auto';
+      notesElement.current.style.height =
+        notesElement.current.scrollHeight + 'px';
+    }
   }, [pages, pageData.data]);
 
   async function imgPreview(file, data) {
@@ -231,12 +236,10 @@ export function RecipeForm({
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
     const functionalBottom =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
-      lastInputRect.height < 120
-        ? lastInputRect.top + 120
+      lastInputRect.height < 106
+        ? lastInputRect.top + 104
         : lastInputRect.bottom;
     const spaceTaken = functionalBottom + (isSubmitPresent ? submitHeight : 0);
-    if (!(spaceTaken > availableHeight)) return;
-    let remainingExcess = spaceTaken - availableHeight;
     const stateSetter =
       lastInput === titleElement.current
         ? setTitle
@@ -245,88 +248,180 @@ export function RecipeForm({
         : lastInput === ingredientsElement.current
         ? setIngredients
         : setNotes;
-    // The following line means if the next page isn't part of this form
-    if (
-      !(
-        pages[thisPageNum + 1]?.type === 'recipeForm' &&
-        pages[thisPageNum + 1].data[0]?.type !== 'title'
-      )
-    ) {
-      pages.splice(thisPageNum + 1, 0, {
-        type: 'recipeForm',
-        data: [],
-      });
-    }
-    const nextPage = pages[thisPageNum + 1];
-    while (remainingExcess > 0) {
-      let entrantToBeMoved;
-      if (isSubmitPresent) {
-        entrantToBeMoved = pageData.data.pop() as Entrant;
-        remainingExcess -= submitHeight;
-        isSubmitPresent = false;
-      } else {
-        if (
-          lastInputRect.height < remainingExcess + lineHeight ||
-          (pageData.data[pageData.data.length - 1].type ===
-            'img-and-ingredients' &&
-            lastInputRect.height < 120)
-        ) {
+    let changedAnything = false;
+    // Overflow:
+    if (spaceTaken > availableHeight) {
+      let remainingExcess = spaceTaken - availableHeight;
+      // The following line means if the next page isn't part of this form
+      if (
+        !(
+          pages[thisPageNum + 1]?.type === 'recipeForm' &&
+          pages[thisPageNum + 1].data[0]?.type !== 'title'
+        )
+      ) {
+        pages.splice(thisPageNum + 1, 0, {
+          type: 'recipeForm',
+          data: [],
+        });
+      }
+      const nextPage = pages[thisPageNum + 1];
+      while (remainingExcess > 0) {
+        let entrantToBeMoved;
+        if (isSubmitPresent) {
           entrantToBeMoved = pageData.data.pop() as Entrant;
-          remainingExcess -= lastInputRect.height;
-          if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
-            entrantToBeMoved.text =
-              entrantToBeMoved.text +
-              '\n' +
-              pages[thisPageNum + 1].data[0].text;
-          } else if (
-            entrantToBeMoved.type === 'img-and-ingredients' &&
-            pages[thisPageNum + 1].data[0].type === 'ingredients'
-          ) {
-            entrantToBeMoved.text =
-              entrantToBeMoved.text +
-              '\n' +
-              pages[thisPageNum + 1].data[0].text;
-            pages[thisPageNum + 1].data.shift();
-          }
+          remainingExcess -= submitHeight;
+          isSubmitPresent = false;
         } else {
-          simulationElement.current.style.width = lastInputRect.width + 'px';
+          if (
+            lastInputRect.height < remainingExcess + lineHeight ||
+            (pageData.data[pageData.data.length - 1].type ===
+              'img-and-ingredients' &&
+              lastInputRect.height < 106)
+          ) {
+            entrantToBeMoved = pageData.data.pop() as Entrant;
+            remainingExcess -=
+              lastInputRect.height + entrantToBeMoved.first ? lineHeight : 0;
+            if (entrantToBeMoved.type === nextPage.data[0].type) {
+              entrantToBeMoved.text =
+                entrantToBeMoved.text + '\n' + nextPage.data[0].text;
+              nextPage.data.shift();
+            } else if (
+              entrantToBeMoved.type === 'img-and-ingredients' &&
+              nextPage.data[0].type === 'ingredients'
+            ) {
+              entrantToBeMoved.text =
+                entrantToBeMoved.text + '\n' + nextPage.data[0].text;
+              nextPage.data.shift();
+            }
+          } else {
+            simulationElement.current.style.width = lastInputRect.width + 'px';
+            const heightGoal =
+              1 +
+              lineHeight *
+                Math.floor(
+                  (lastInputRect.height - remainingExcess) / lineHeight
+                );
+            const [text, unformattedLeftover] = adjustInput(
+              heightGoal,
+              lastInput.value,
+              simulationElement.current
+            ) as string[];
+            const leftover =
+              unformattedLeftover[0] === '\n'
+                ? unformattedLeftover.slice(1)
+                : unformattedLeftover;
+            const lastInputData = pageData.data[pageData.data.length - 1];
+            lastInputData.text = text;
+            lastInput.value = text;
+            stateSetter(text);
+            lastInput.style.height = 'auto';
+            lastInput.style.height = lastInput.scrollHeight + 'px';
+            entrantToBeMoved =
+              pageData.data[pageData.data.length - 1].type ===
+              'img-and-ingredients'
+                ? { type: 'ingredients' }
+                : { ...pageData.data[pageData.data.length - 1] };
+            entrantToBeMoved.text = leftover;
+            remainingExcess -= heightGoal;
+            if (entrantToBeMoved.type === nextPage.data[0].type) {
+              nextPage.data[0].text = leftover + '\n' + nextPage.data[0].text;
+              entrantToBeMoved = undefined;
+              changedAnything = true;
+            }
+            nextPage.data = [...nextPage.data];
+          }
+        }
+        if (entrantToBeMoved) {
+          nextPage.data.unshift(entrantToBeMoved);
+          changedAnything = true;
+        }
+      }
+    }
+    // Underflow:
+    else {
+      // The following line means if the next page isn't part of this form
+      if (
+        !(
+          pages[thisPageNum + 1]?.type === 'recipeForm' &&
+          pages[thisPageNum + 1].data[0]?.type !== 'title'
+        )
+      ) {
+        return;
+      }
+      const nextPage = pages[thisPageNum + 1];
+      let emptySpace = availableHeight - spaceTaken;
+      while (emptySpace >= lineHeight) {
+        let entrantToBeMoved;
+        if (nextPage.data[0].type === 'submit') {
+          if (emptySpace >= submitHeight) {
+            entrantToBeMoved = { ...nextPage.data[0] };
+            pages.splice(thisPageNum + 1, 1);
+            emptySpace -= submitHeight;
+          } else {
+            break;
+          }
+        } else if (
+          (nextPage.data[0].type !== 'img-and-ingredients' &&
+            nextPage.data[0].first &&
+            emptySpace >= lineHeight * 2) ||
+          (nextPage.data[0].type === 'img-and-ingredients' && emptySpace >= 120)
+        ) {
+          simulationElement.current.style.width =
+            (nextPage.data[0].type === 'img-and-ingredients' ? 139 : 261) +
+            'px';
           const heightGoal =
-            1 +
-            lineHeight *
-              Math.floor((lastInputRect.height - remainingExcess) / lineHeight);
+            1 + lineHeight * Math.floor((emptySpace - lineHeight) / lineHeight);
           const [text, unformattedLeftover] = adjustInput(
             heightGoal,
-            lastInput.value,
+            nextPage.data[0].text as string,
             simulationElement.current
           ) as string[];
           const leftover =
             unformattedLeftover[0] === '\n'
               ? unformattedLeftover.slice(1)
               : unformattedLeftover;
-          const lastInputData = pageData.data[pageData.data.length - 1];
-          lastInputData.text = text;
-          lastInput.value = text;
-          stateSetter(text);
-          lastInput.style.height = 'auto';
-          lastInput.style.height = lastInput.scrollHeight + 'px';
-          entrantToBeMoved =
-            pageData.data[pageData.data.length - 1].type ===
-            'img-and-ingredients'
-              ? { type: 'ingredients' }
-              : { ...pageData.data[pageData.data.length - 1] };
-          entrantToBeMoved.text = leftover;
-          remainingExcess -= heightGoal;
-          if (entrantToBeMoved.type === pages[thisPageNum + 1].data[0].type) {
-            pages[thisPageNum + 1].data[0].text =
-              leftover + '\n' + pages[thisPageNum + 1].data[0].text;
-            entrantToBeMoved = undefined;
+          entrantToBeMoved = { ...nextPage.data[0] };
+          entrantToBeMoved.text = text;
+          nextPage.data[0].first = undefined;
+          nextPage.data[0].text = leftover;
+          if (nextPage.data[0].type === 'img-and-ingredients')
+            nextPage.data[0].type = 'ingredients';
+          if (unformattedLeftover === '') nextPage.data.shift();
+          emptySpace -= heightGoal + lineHeight;
+        } else if (!nextPage.data[0].first) {
+          simulationElement.current.style.width =
+            (nextPage.data[0].type === 'ingredients' ? 139 : 261) + 'px';
+          const heightGoal =
+            1 + lineHeight * Math.floor(emptySpace / lineHeight);
+          const [text, unformattedLeftover] = adjustInput(
+            heightGoal,
+            nextPage.data[0].text as string,
+            simulationElement.current
+          ) as string[];
+          pageData.data[pageData.data.length - 1].text =
+            pageData.data[pageData.data.length - 1].text + '\n' + text;
+          const leftover =
+            unformattedLeftover[0] === '\n'
+              ? unformattedLeftover.slice(1)
+              : unformattedLeftover;
+          nextPage.data[0].text = leftover;
+          if (leftover === '') {
+            nextPage.data.shift();
           }
-          pages[thisPageNum + 1].data = [...pages[thisPageNum + 1].data];
+          emptySpace -= heightGoal;
+          changedAnything = true;
+        } else {
+          break;
+        }
+        if (entrantToBeMoved) {
+          pageData.data.push(entrantToBeMoved);
+          changedAnything = true;
         }
       }
-      if (entrantToBeMoved) nextPage.data.unshift(entrantToBeMoved);
     }
-    setPages([...pages]);
+    if (changedAnything) {
+      setPages([...pages]);
+    }
   }, [pageData, pages, setPages, thisPageNum]);
 
   useEffect(() => checkPageEnd(), [checkPageEnd]);
@@ -391,7 +486,7 @@ export function RecipeForm({
                 </label>
                 {imgUrl && (
                   <div
-                    className={`absolute top-[84px] left-[80px] w-[40px] h-[40px]
+                    className={`absolute top-[80px] left-[80px] w-[40px] h-[40px]
                   bg-gradient-to-br from-[#ffffff00] from-50% to-[#88888899] to-50%`}>
                     <div
                       className="w-[16px] h-[16px] m-[20px] pl-[1px] text-base
@@ -569,6 +664,7 @@ function adjustInput(
   text: string,
   element: HTMLTextAreaElement
 ): string[] | undefined {
+  if (text === '') return ['\n', ''];
   const recursiveTextSplitter = (
     str,
     leftover,
