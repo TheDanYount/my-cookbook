@@ -121,7 +121,6 @@ app.post('/api/create-cookbook', authMiddleware, async (req, res, next) => {
     const { style, title } = req.body;
     if (!style) throw new ClientError(400, 'style is required');
     if (!title) throw new ClientError(400, 'title is required');
-    // Remove once form is updated
     const isPublic = false;
     if (!req.user?.userId) throw new ClientError(401, 'user not found');
     const sql = `
@@ -153,9 +152,7 @@ app.post(
         : '';
       const cookbookId = Number(req.body.cookbookId);
       const { title, ingredients, directions, notes, length, order } = req.body;
-      // Remove once form is updated
       const isFavorite = false;
-      // Remove once form is updated
       const isPublic = false;
       if (!cookbookId)
         throw new ClientError(400, 'cookbookId for recipe not recognized');
@@ -348,9 +345,7 @@ app.put(
         order,
         imageState,
       } = req.body;
-      // Remove once form is updated
       const isFavorite = false;
-      // Remove once form is updated
       const isPublic = false;
       let sql;
       let params;
