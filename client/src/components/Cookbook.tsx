@@ -35,6 +35,7 @@ export function Cookbook() {
   );
   const { width } = useWindowDimensions();
   const [smallScreenShift, setSmallScreenShift] = useState(width < 660);
+  const [largeScreenZoom, setLargeScreenZoom] = useState(width >= 1280);
 
   useEffect(() => {
     if (!cookbook || !cookbookId || cookbook?.cookbookId !== +cookbookId)
@@ -62,22 +63,27 @@ export function Cookbook() {
   }, [cookbook, cookbookId]);
 
   useEffect(() => {
-    if (isLoading !== false) return;
+    if (!(isLoading === false)) return;
     if (!pageNum || +pageNum < 1 || +pageNum > pages.length - 1) {
       alert('page not found');
       navigate('/NotFound');
       throw new Error('page not found');
     }
-    setLeftPage(+pageNum - (+pageNum % 2 ? 0 : 1));
+    setLeftPage(+pageNum - ((+pageNum + 1) % 2));
   }, [pageNum, navigate, isLoading, pages.length]);
 
   useEffect(() => {
+    if (width >= 1280 && largeScreenZoom === false) {
+      setLargeScreenZoom(true);
+    } else if (width < 1280 && largeScreenZoom === true) {
+      setLargeScreenZoom(false);
+    }
     if (width < 660 && smallScreenShift === false) {
       setSmallScreenShift(true);
     } else if (width >= 660 && smallScreenShift === true) {
       setSmallScreenShift(false);
     }
-  }, [width, smallScreenShift]);
+  }, [width, smallScreenShift, largeScreenZoom]);
 
   if (!(isLoading === false)) return 'Loading';
 
@@ -91,13 +97,18 @@ export function Cookbook() {
   const bgColor =
     bgColorIndex && cookbook?.style.slice(bgColorIndex + 8, bgColorIndex + 15);
 
+  console.log(smallScreenShift);
+  console.log(leftPage);
   return (
     <div
       className={`font-["Patrick_Hand"] text-[14px] ${
         smallScreenShift && pageNum && +pageNum - leftPage === 1
           ? 'ml-[-234px]'
-          : ''
-      } flex w-[588px] mt-[60px] ${width < 660 ? 'ml-[60px]' : 'mx-auto'}`}>
+          : 'mx-auto'
+      }
+          flex w-[588px]
+      ${largeScreenZoom ? 'mt-[246px]' : 'mt-[60px]'}
+      ${largeScreenZoom && 'scale-[2]'}`}>
       <div
         className="w-[294px] h-[372px] rounded-l-[6px] pt-[13px] pl-[13px]"
         style={{ backgroundColor: bgColor || '#4C301E' }}>
