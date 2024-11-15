@@ -85,7 +85,15 @@ export function Cookbook() {
     }
   }, [width, smallScreenShift, largeScreenZoom]);
 
-  if (!(isLoading === false)) return 'Loading';
+  if (!(isLoading === false))
+    return (
+      <div className="h-screen flex justify-center items-center">
+        <img
+          src="/rimmed-loader.png"
+          alt="loading spinner"
+          className="h-[40px] animate-spin"></img>
+      </div>
+    );
 
   function handlePageTurn(number) {
     if (!pageNum) return;
