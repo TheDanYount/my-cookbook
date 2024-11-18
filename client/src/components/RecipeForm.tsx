@@ -234,6 +234,14 @@ export function RecipeForm({
     let changedAnything = false;
     // Overflow:
     if (spaceTaken > availableHeight) {
+      console.log(
+        'overflow! spaceTaken:',
+        spaceTaken,
+        'LIVal:',
+        lastInput.value,
+        'data:',
+        pageData
+      );
       let remainingExcess = spaceTaken - availableHeight;
       // The following line means if the next page isn't part of this form
       if (
@@ -305,6 +313,8 @@ export function RecipeForm({
                 ? { type: 'ingredients' }
                 : { ...pageData.data[pageData.data.length - 1] };
             entrantToBeMoved.text = leftover;
+            entrantToBeMoved.first = undefined;
+            console.log(entrantToBeMoved);
             remainingExcess -= heightGoal;
             if (entrantToBeMoved.type === nextPage.data[0].type) {
               nextPage.data[0].text = leftover + '\n' + nextPage.data[0].text;
@@ -321,7 +331,7 @@ export function RecipeForm({
       }
     }
     // Underflow:
-    else {
+    else if (spaceTaken <= availableHeight - lineHeight) {
       // The following line means if the next page isn't part of this form
       if (
         !(
@@ -331,7 +341,7 @@ export function RecipeForm({
       ) {
         return;
       }
-      const nextPage = pages[thisPageNum + 1];
+      let nextPage = pages[thisPageNum + 1];
       let emptySpace = availableHeight - spaceTaken;
       while (emptySpace >= lineHeight) {
         let entrantToBeMoved;
@@ -381,15 +391,19 @@ export function RecipeForm({
             nextPage.data[0].text as string,
             simulationElement.current
           ) as string[];
-          pageData.data[pageData.data.length - 1].text =
-            pageData.data[pageData.data.length - 1].text + '\n' + text;
+          if (text !== '')
+            pageData.data[pageData.data.length - 1].text =
+              pageData.data[pageData.data.length - 1].text + '\n' + text;
           const leftover =
             unformattedLeftover[0] === '\n'
               ? unformattedLeftover.slice(1)
               : unformattedLeftover;
           nextPage.data[0].text = leftover;
+          console.log('check:', leftover === '');
           if (leftover === '') {
+            console.log('shifting');
             nextPage.data.shift();
+            nextPage = { ...nextPage };
           }
           emptySpace -= heightGoal;
           changedAnything = true;
@@ -403,6 +417,7 @@ export function RecipeForm({
       }
     }
     if (changedAnything) {
+      console.log('reloading');
       setPages([...pages]);
     }
   }, [pageData, pages, setPages, thisPageNum]);

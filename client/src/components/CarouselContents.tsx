@@ -26,7 +26,7 @@ export function CarouselContents({ cookbooks }: Props) {
             key={`cookbook${book.cookbookId}`}
             style={{ backgroundColor: bgColor }}>
             <div className="basis-[40px]"></div>
-            <p className="text-pretty" style={{ color: titleColor }}>
+            <p className="w-full break-words" style={{ color: titleColor }}>
               {book.title}
             </p>
           </button>

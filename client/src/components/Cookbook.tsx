@@ -105,8 +105,6 @@ export function Cookbook() {
   const bgColor =
     bgColorIndex && cookbook?.style.slice(bgColorIndex + 8, bgColorIndex + 15);
 
-  console.log(smallScreenShift);
-  console.log(leftPage);
   return (
     <div
       className={`font-["Patrick_Hand"] text-[14px] ${
