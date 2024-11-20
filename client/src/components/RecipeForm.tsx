@@ -219,6 +219,11 @@ export function RecipeForm({
     const lastInputRect = lastInput?.getBoundingClientRect();
     const isSubmitPresent =
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
+    const endOfPage =
+      pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
+      lastInputRect.height < 104
+        ? lastInputRect.top + 104 + (isSubmitPresent ? submitHeight : 0)
+        : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
     /*
     Determine end of page
       While content is too long
