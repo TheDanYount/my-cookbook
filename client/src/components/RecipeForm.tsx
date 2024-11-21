@@ -222,7 +222,7 @@ export function RecipeForm({
     const endOfPage =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
       lastInputRect.height < 104
-        ? lastInputRect.top + 104 + (isSubmitPresent ? submitHeight : 0)
+        ? lastInputRect.top + 104
         : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
     /*
     Determine end of page
