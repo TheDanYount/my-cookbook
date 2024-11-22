@@ -224,6 +224,15 @@ export function RecipeForm({
       lastInputRect.height < 104
         ? lastInputRect.top + 104
         : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
+    while (endOfPage > availableHeight) {
+      const changedAnything = false;
+      const nextPage =
+        pages[thisPageNum + 1]?.type === 'recipeForm' &&
+        pages[thisPageNum + 1]?.data[0]?.type !== 'title'
+          ? pages[thisPageNum + 1]
+          : { type: 'recipeForm', data: [] };
+      if (!nextPage.data[0]) pages.splice(thisPageNum, 0, nextPage);
+    }
     /*
     Determine end of page
       While content is too long
