@@ -35,13 +35,26 @@ export function Recipe({ pageData }: IndividualPageProps) {
                     className="object-cover h-full mx-auto"
                   />
                 </div>
-                <div className={`block basis-[141px] px-[2px]`}>
-                  {e.first && (
-                    <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
-                      Ingredients
-                    </h2>
-                  )}
-                  <p style={{ fontSize: '14px' }}>{formattedText}</p>
+                <div className={`block basis-[141px]`}>
+                  <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                    Ingredients
+                  </h2>
+                  <p className="pl-[2px]" style={{ fontSize: '14px' }}>
+                    {formattedText}
+                  </p>
+                </div>
+              </div>
+            );
+          case 'ingredients':
+            return (
+              <div className="flex justify-end" key={'key:' + keyCount}>
+                <div className={`block basis-[141px]`}>
+                  <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
+                    Ingredients
+                  </h2>
+                  <p className="pl-[2px]" style={{ fontSize: '14px' }}>
+                    {formattedText}
+                  </p>
                 </div>
               </div>
             );

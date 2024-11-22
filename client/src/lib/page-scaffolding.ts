@@ -178,10 +178,10 @@ export function getRecipeForm() {
   return {
     type: 'recipeForm',
     data: [
-      { type: 'title' },
-      { type: 'img-and-ingredients', first: true },
-      { type: 'directions', first: true },
-      { type: 'notes', first: true },
+      { type: 'title', text: '' },
+      { type: 'img-and-ingredients', text: '', first: true },
+      { type: 'directions', text: '', first: true },
+      { type: 'notes', text: '', first: true },
       { type: 'submit' },
     ],
   };
@@ -218,7 +218,11 @@ export function convertRecipeToForm(
         if (type === 'img-and-ingredients') {
           usedIngredients = true;
         } else if (type === 'directions' || type === 'notes') {
-          dataToAdd.push({ type: 'img-and-ingredients', first: true });
+          dataToAdd.push({
+            type: 'img-and-ingredients',
+            text: '',
+            first: true,
+          });
           usedIngredients = true;
         }
       }
@@ -226,7 +230,7 @@ export function convertRecipeToForm(
         if (type === 'directions') {
           usedIngredients = true;
         } else if (type === 'notes') {
-          dataToAdd.push({ type: 'directions', first: true });
+          dataToAdd.push({ type: 'directions', text: '', first: true });
           usedDirections = true;
         }
       }
@@ -239,10 +243,15 @@ export function convertRecipeToForm(
         mapIndex === pagesToConvert.length - 1
       ) {
         if (!usedIngredients)
-          dataToAdd.push({ type: 'img-and-ingredients', first: true });
+          dataToAdd.push({
+            type: 'img-and-ingredients',
+            text: '',
+            first: true,
+          });
         if (!usedDirections)
-          dataToAdd.push({ type: 'directions', first: true });
-        if (!usedNotes) dataToAdd.push({ type: 'notes', first: true });
+          dataToAdd.push({ type: 'directions', text: '', first: true });
+        if (!usedNotes)
+          dataToAdd.push({ type: 'notes', text: '', first: true });
         dataToAdd.push({ type: 'submit' });
       }
     }

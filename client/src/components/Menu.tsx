@@ -16,8 +16,7 @@ type Props = {
 
 export function Menu({ mode }: Props) {
   const { width } = useWindowDimensions();
-  const { user } = useContext(UserContext);
-  const { handleSignIn } = useContext(UserContext);
+  const { user, handleSignIn } = useContext(UserContext);
   const { cookbookId } = useParams();
   const { setCookbook } = useContext(CookbookContext);
   const [isOpen, setIsOpen] = useState<boolean>(cookbookId ? false : true);

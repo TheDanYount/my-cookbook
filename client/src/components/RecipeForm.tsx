@@ -7,6 +7,7 @@ import { CookbookContext } from './CookbookContext';
 import { FaTrash } from 'react-icons/fa';
 import { authKey } from './UserContext';
 import React from 'react';
+import { useWindowDimensions } from '../lib/window-dimensions';
 
 type RecipeFormIndividualPageProps = IndividualPageProps & {
   thisPageNum: number;
@@ -41,10 +42,8 @@ export function RecipeForm({
   const directionsElement = useRef<HTMLTextAreaElement>(null);
   const notesElement = useRef<HTMLTextAreaElement>(null);
   const simulationElement = useRef<HTMLTextAreaElement>(null);
+  const { width } = useWindowDimensions();
   const navigate = useNavigate();
-  const availableHeight = 398; // with current Cookbook Position, update if changed
-  const submitHeight = 24; // with current submit element, update if changed
-  const lineHeight = 16; // for non-title inputs with current font size, update if changed
   let keyCount = -1;
 
   useEffect(() => {
@@ -207,6 +206,9 @@ export function RecipeForm({
   }
 
   const checkPageEnd = useCallback(() => {
+    const availableHeight = width < 1280 ? 398 : 736; // with current Cookbook Position, update if changed
+    const submitHeight = width < 1280 ? 24 : 48; // with current submit element, update if changed
+    const lineHeight = width < 1280 ? 16 : 32; // for non-title inputs with current font size, update if changed
     const lastInput =
       notesElement.current ||
       directionsElement.current ||
@@ -215,195 +217,139 @@ export function RecipeForm({
     if (!lastInput) return;
     if (!simulationElement.current) return;
     const lastInputRect = lastInput?.getBoundingClientRect();
-    let isSubmitPresent =
+    const isSubmitPresent =
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
-    const functionalBottom =
+    const endOfPage =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
-      lastInputRect.height < 106
+      lastInputRect.height < 104
         ? lastInputRect.top + 104
-        : lastInputRect.bottom;
-    const spaceTaken = functionalBottom + (isSubmitPresent ? submitHeight : 0);
-    const stateSetter =
-      lastInput === titleElement.current
-        ? setTitle
-        : lastInput === directionsElement.current
-        ? setDirections
-        : lastInput === ingredientsElement.current
-        ? setIngredients
-        : setNotes;
-    let changedAnything = false;
-    // Overflow:
-    if (spaceTaken > availableHeight) {
-      let remainingExcess = spaceTaken - availableHeight;
-      // The following line means if the next page isn't part of this form
-      if (
-        !(
-          pages[thisPageNum + 1]?.type === 'recipeForm' &&
-          pages[thisPageNum + 1].data[0]?.type !== 'title'
-        )
-      ) {
-        pages.splice(thisPageNum + 1, 0, {
-          type: 'recipeForm',
-          data: [],
-        });
-      }
-      const nextPage = pages[thisPageNum + 1];
-      while (remainingExcess > 0) {
-        let entrantToBeMoved;
-        if (isSubmitPresent) {
-          entrantToBeMoved = pageData.data.pop() as Entrant;
-          remainingExcess -= submitHeight;
-          isSubmitPresent = false;
-        } else {
-          if (
-            lastInputRect.height < remainingExcess + lineHeight ||
-            (pageData.data[pageData.data.length - 1].type ===
-              'img-and-ingredients' &&
-              lastInputRect.height < 106)
-          ) {
-            entrantToBeMoved = pageData.data.pop() as Entrant;
-            remainingExcess -=
-              lastInputRect.height + entrantToBeMoved.first ? lineHeight : 0;
-            if (entrantToBeMoved.type === nextPage.data[0].type) {
-              entrantToBeMoved.text =
-                entrantToBeMoved.text + '\n' + nextPage.data[0].text;
-              nextPage.data.shift();
-            } else if (
-              entrantToBeMoved.type === 'img-and-ingredients' &&
-              nextPage.data[0].type === 'ingredients'
-            ) {
-              entrantToBeMoved.text =
-                entrantToBeMoved.text + '\n' + nextPage.data[0].text;
-              nextPage.data.shift();
-            }
-          } else {
-            simulationElement.current.style.width = lastInputRect.width + 'px';
-            const heightGoal =
-              1 +
-              lineHeight *
-                Math.floor(
-                  (lastInputRect.height - remainingExcess) / lineHeight
-                );
-            const [text, unformattedLeftover] = adjustInput(
-              heightGoal,
-              lastInput.value,
-              simulationElement.current
-            ) as string[];
-            const leftover =
-              unformattedLeftover[0] === '\n'
-                ? unformattedLeftover.slice(1)
-                : unformattedLeftover;
-            const lastInputData = pageData.data[pageData.data.length - 1];
-            lastInputData.text = text;
-            lastInput.value = text;
-            stateSetter(text);
-            lastInput.style.height = 'auto';
-            lastInput.style.height = lastInput.scrollHeight + 'px';
-            entrantToBeMoved =
-              pageData.data[pageData.data.length - 1].type ===
-              'img-and-ingredients'
-                ? { type: 'ingredients' }
-                : { ...pageData.data[pageData.data.length - 1] };
-            entrantToBeMoved.text = leftover;
-            remainingExcess -= heightGoal;
-            if (entrantToBeMoved.type === nextPage.data[0].type) {
-              nextPage.data[0].text = leftover + '\n' + nextPage.data[0].text;
-              entrantToBeMoved = undefined;
-              changedAnything = true;
-            }
-            nextPage.data = [...nextPage.data];
-          }
-        }
-        if (entrantToBeMoved) {
-          nextPage.data.unshift(entrantToBeMoved);
-          changedAnything = true;
-        }
-      }
+        : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
+    while (endOfPage > availableHeight) {
+      const changedAnything = false;
+      const nextPage =
+        pages[thisPageNum + 1]?.type === 'recipeForm' &&
+        pages[thisPageNum + 1]?.data[0]?.type !== 'title'
+          ? pages[thisPageNum + 1]
+          : { type: 'recipeForm', data: [] };
+      if (!nextPage.data[0]) pages.splice(thisPageNum, 0, nextPage);
     }
-    // Underflow:
-    else {
-      // The following line means if the next page isn't part of this form
-      if (
-        !(
-          pages[thisPageNum + 1]?.type === 'recipeForm' &&
-          pages[thisPageNum + 1].data[0]?.type !== 'title'
-        )
-      ) {
-        return;
+    /*
+    Determine end of page
+      While content is too long
+        let changedAnything = false
+        If nextPage is of this form
+          set it as nextPage
+        Else
+          Create new page and splice it in pages
+          set it as nextPage
+        If submit is present
+          Pop submit as entrantToBeMoved
+          Unshift EntrantToBeMoved
+          Update remainingExcess
+          ChangedAnything = true
+        Else if last element should be moved entirely
+          Pop
+          Unshift
+          Update remainingExcess
+            If not first: with height
+            Else if 'img-and-ingredients and height < 104: with (width < 1280 ? 120 : 240)
+            Else: with height + lineHeight (for subtitle)
+          ChangedAnything = true
+        Else, meaning split
+          Update simulationElement's width to lastInput's width
+          use adjustInput with heightGoal of height - remainingExcess, original text, & simulationElement, it returns text & unformattedLeftover
+          If UL starts with a '\n' and has length > 1, trim it w/ splice(1);
+          Update remainingExcess with
+            If img-and-ingredients and height < (width < 1280 ? 104 : 208): height - (width < 1280 ? 120 : 240)
+            Else: height - simulationElement.current.getBoundingRect().height
+          Set lastInput's text to text
+          Set entrantToBeMoved to contain leftover unless types match, in which case set first element on next page to have text of leftover + '\n' + current
+          ChangedAnything = true
+        If changedAnything
+            setPages
+      While content is too short
+        Check for next page
+          If not, break
+        Check for if emptySpace >= lineHeight + 1
+          If not, break
+        let changedAnything = false
+        If submit is next
+          If emptySpace > submitHeight
+            Pop
+            Unshift
+            Update emptySpace
+            ChangedAnything = true
+          Else
+            Break
+        Else if types match and emptySpace
+          Update simulationElement's width to lastInput's width
+          use adjustInput with heightGoal of height + emptySpace, the concatenated texts, & simulationElement, it returns text & unformattedLeftover
+          Update emptySpace with simulationElement.current.getBoundingRect().height - height
+          If UL is blank
+            shift
+          Else
+            If UL starts w/ '\n' and has length > 1
+              Trim
+            Next page's first element's text is set to UL
+          Set lastInput's text to text
+          ChangedAnything = true
+        Else if next is 'img-and-ingredients'
+          If emptySpace >= (width < 1280 ? 120 : 240)
+          Update simulationElement's width to lastInput's width
+          use adjustInput with heightGoal of height + emptySpace, next's text, & simulationElement, it returns text & unformattedLeftover
+          Update emptySpace with
+            If simulationElement's height > (width < 1280 ? 120 : 240)
+              simulationElement's height
+            Else
+              (width < 1280 ? 120 : 240)
+          Push a copy of 'img-and-ingredients with text as text
+          Shift
+            If Ul !== ''
+              If UL starts w/ '\n' and has length > 1
+                Trim
+              Create new 'ingredients' with UL as text
+              Unshift new 'ingredients'
+          Else
+            Break
+        Else if next is 'ingredients'
+          Update simulationElement's width to lastInput's width
+          use adjustInput with heightGoal of height <= (width < 1280 ? 120 : 240) ? (width < 1280 ? 120 : 240) + emptySpace : height + emptySpace, the concatenated texts, & simulationElement, it returns text & unformattedLeftover
+          Update emptySpace with
+            If simulationElement's height < (width < 1280 ? 120 : 240): 0
+            If height <= (width < 1280 ? 120 : 240)
+              simulationElement's height - (width < 1280 ? 120 : 240)
+            Else
+              simulationElement's height - height
+          Set lastInput's text to text
+          If Ul !== ''
+            If UL starts w/ '\n' and has length > 1
+              Trim
+            Next's text = UL
+          Else
+            Shift
+          ChangedAnything = true
+        Else if types do not match and emptySpace >= 2*lineHeight + 1
+          Update simulationElement's width to lastInput's width
+          use adjustInput with heightGoal of height + emptySpace, next's text, & simulationElement, it returns text & unformattedLeftover
+          Update emptySpace with simulationElement's height + lineHeight
+          Push entrantToBeMoved with text as text and first
+          If UL starts with '\n' and has length > 1
+            trim
+          If l !== ''
+            Next's text = L
+          Else
+            Shift
+          ChangedAnything = true
+          Else
+            Break
+        If changedAnything
+            setPages
+
+    */
+    while (false) {
+      if (changedAnything) {
+        setPages([...pages]);
       }
-      const nextPage = pages[thisPageNum + 1];
-      let emptySpace = availableHeight - spaceTaken;
-      while (emptySpace >= lineHeight) {
-        let entrantToBeMoved;
-        if (nextPage.data[0].type === 'submit') {
-          if (emptySpace >= submitHeight) {
-            entrantToBeMoved = { ...nextPage.data[0] };
-            pages.splice(thisPageNum + 1, 1);
-            emptySpace -= submitHeight;
-          } else {
-            break;
-          }
-        } else if (
-          (nextPage.data[0].type !== 'img-and-ingredients' &&
-            nextPage.data[0].first &&
-            emptySpace >= lineHeight * 2) ||
-          (nextPage.data[0].type === 'img-and-ingredients' && emptySpace >= 120)
-        ) {
-          simulationElement.current.style.width =
-            (nextPage.data[0].type === 'img-and-ingredients' ? 139 : 261) +
-            'px';
-          const heightGoal =
-            1 + lineHeight * Math.floor((emptySpace - lineHeight) / lineHeight);
-          const [text, unformattedLeftover] = adjustInput(
-            heightGoal,
-            nextPage.data[0].text as string,
-            simulationElement.current
-          ) as string[];
-          const leftover =
-            unformattedLeftover[0] === '\n'
-              ? unformattedLeftover.slice(1)
-              : unformattedLeftover;
-          entrantToBeMoved = { ...nextPage.data[0] };
-          entrantToBeMoved.text = text;
-          nextPage.data[0].first = undefined;
-          nextPage.data[0].text = leftover;
-          if (nextPage.data[0].type === 'img-and-ingredients')
-            nextPage.data[0].type = 'ingredients';
-          if (unformattedLeftover === '') nextPage.data.shift();
-          emptySpace -= heightGoal + lineHeight;
-        } else if (!nextPage.data[0].first) {
-          simulationElement.current.style.width =
-            (nextPage.data[0].type === 'ingredients' ? 139 : 261) + 'px';
-          const heightGoal =
-            1 + lineHeight * Math.floor(emptySpace / lineHeight);
-          const [text, unformattedLeftover] = adjustInput(
-            heightGoal,
-            nextPage.data[0].text as string,
-            simulationElement.current
-          ) as string[];
-          pageData.data[pageData.data.length - 1].text =
-            pageData.data[pageData.data.length - 1].text + '\n' + text;
-          const leftover =
-            unformattedLeftover[0] === '\n'
-              ? unformattedLeftover.slice(1)
-              : unformattedLeftover;
-          nextPage.data[0].text = leftover;
-          if (leftover === '') {
-            nextPage.data.shift();
-          }
-          emptySpace -= heightGoal;
-          changedAnything = true;
-        } else {
-          break;
-        }
-        if (entrantToBeMoved) {
-          pageData.data.push(entrantToBeMoved);
-          changedAnything = true;
-        }
-      }
-    }
-    if (changedAnything) {
-      setPages([...pages]);
     }
   }, [pageData, pages, setPages, thisPageNum]);
 
@@ -479,7 +425,7 @@ export function RecipeForm({
                     </div>
                   </div>
                 )}
-                <div className="basis-[141px] pl-[2px] self-stretch">
+                <div className="basis-[141px] self-stretch">
                   {e.first && (
                     <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
                       Ingredients
@@ -488,7 +434,7 @@ export function RecipeForm({
                   <textarea
                     name="ingredients"
                     rows={1}
-                    className={`w-full resize-none bg-[#ffffff88] overflow-hidden`}
+                    className={`w-full pl-[2px] resize-none bg-[#ffffff88] overflow-hidden`}
                     placeholder="[Input ingredients here]"
                     style={{ fontSize: '14px' }}
                     ref={ingredientsElement}
@@ -511,7 +457,7 @@ export function RecipeForm({
               <div
                 className="flex justify-end my-[-4px]"
                 key={`key:${keyCount}`}>
-                <div className="basis-[141px] pl-[2px] self-stretch my-1">
+                <div className="basis-[141px] self-stretch my-1">
                   {e.first && (
                     <h2 className="font-['Shantell_Sans'] font-semibold text-[14px]">
                       Ingredients
@@ -520,7 +466,7 @@ export function RecipeForm({
                   <textarea
                     name="ingredients"
                     rows={1}
-                    className={`w-full resize-none bg-[#ffffff88] overflow-hidden`}
+                    className={`w-full pl-[2px] resize-none bg-[#ffffff88] overflow-hidden`}
                     placeholder="[Input ingredients here]"
                     style={{ fontSize: '14px' }}
                     ref={ingredientsElement}
@@ -646,7 +592,7 @@ function adjustInput(
   heightGoal: number,
   text: string,
   element: HTMLTextAreaElement
-): string[] | undefined {
+): string[] {
   if (text === '') return ['\n', ''];
   const recursiveTextSplitter = (
     str,
@@ -702,5 +648,5 @@ function adjustInput(
     text.slice(text.length / 2),
     Math.ceil(text.length / 2),
     false
-  );
+  ) as string[];
 }
