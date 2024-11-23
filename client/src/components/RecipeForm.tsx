@@ -226,12 +226,13 @@ export function RecipeForm({
         : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
     while (endOfPage > availableHeight) {
       const changedAnything = false;
-      const nextPage =
+      const formHasNextPage =
         pages[thisPageNum + 1]?.type === 'recipeForm' &&
-        pages[thisPageNum + 1]?.data[0]?.type !== 'title'
-          ? pages[thisPageNum + 1]
-          : { type: 'recipeForm', data: [] };
-      if (!nextPage.data[0]) pages.splice(thisPageNum, 0, nextPage);
+        pages[thisPageNum + 1]?.data[0]?.type !== 'title';
+      const nextPage = formHasNextPage
+        ? pages[thisPageNum + 1]
+        : { type: 'recipeForm', data: [] };
+      if (!formHasNextPage) pages.splice(thisPageNum, 0, nextPage);
     }
     /*
     Determine end of page
