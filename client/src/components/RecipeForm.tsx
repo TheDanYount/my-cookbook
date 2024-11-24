@@ -219,20 +219,26 @@ export function RecipeForm({
     const lastInputRect = lastInput?.getBoundingClientRect();
     const isSubmitPresent =
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
-    const endOfPage =
+    let endOfPage =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
       lastInputRect.height < 104
         ? lastInputRect.top + 104
         : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
+    const formHasNextPage =
+      pages[thisPageNum + 1]?.type === 'recipeForm' &&
+      pages[thisPageNum + 1]?.data[0]?.type !== 'title';
+    const nextPage = formHasNextPage
+      ? pages[thisPageNum + 1]
+      : { type: 'recipeForm', data: [] };
+    if (!formHasNextPage) pages.splice(thisPageNum, 0, nextPage);
     while (endOfPage > availableHeight) {
-      const changedAnything = false;
-      const formHasNextPage =
-        pages[thisPageNum + 1]?.type === 'recipeForm' &&
-        pages[thisPageNum + 1]?.data[0]?.type !== 'title';
-      const nextPage = formHasNextPage
-        ? pages[thisPageNum + 1]
-        : { type: 'recipeForm', data: [] };
-      if (!formHasNextPage) pages.splice(thisPageNum, 0, nextPage);
+      let changedAnything = false;
+      if (isSubmitPresent) {
+        const entrantToBeMoved = pageData.data.pop() as Entrant;
+        nextPage.data.unshift(entrantToBeMoved);
+        endOfPage -= submitHeight;
+        changedAnything = true;
+      }
     }
     /*
     Determine end of page
