@@ -51,6 +51,14 @@ export function RecipeForm({
   }, [imgStore?.fileUrl]);
 
   useEffect(() => {
+    const newTitle = pageData.data.find((e) => e.type === 'title')?.text || '';
+    setTitle(newTitle);
+    if (titleElement.current) {
+      titleElement.current.value = newTitle;
+      titleElement.current.style.height = 'auto';
+      titleElement.current.style.height =
+        titleElement.current.scrollHeight + 'px';
+    }
     const newIngredients =
       pageData.data.find((e) => e.type === 'img-and-ingredients')?.text ||
       pageData.data.find((e) => e.type === 'ingredients')?.text ||
@@ -64,7 +72,6 @@ export function RecipeForm({
     }
     const newDirections =
       pageData.data.find((e) => e.type === 'directions')?.text || '';
-
     setDirections(newDirections);
     if (directionsElement.current) {
       directionsElement.current.value = newDirections;
@@ -116,8 +123,8 @@ export function RecipeForm({
     data.append('cookbookId', String(cookbookId));
     data.append('title', title);
     const ingredients = [
-      ...extractText(formPages, 'ingredients'),
       ...extractText(formPages, 'img-and-ingredients'),
+      ...extractText(formPages, 'ingredients'),
     ]; // An array
     data.append('ingredients', JSON.stringify(ingredients));
     const directions = extractText(formPages, 'directions'); // An array
@@ -209,6 +216,7 @@ export function RecipeForm({
     const availableHeight = width < 1280 ? 398 : 736; // with current Cookbook Position, update if changed
     const submitHeight = width < 1280 ? 24 : 48; // with current submit element, update if changed
     const lineHeight = width < 1280 ? 16 : 32; // for non-title inputs with current font size, update if changed
+    const imageHeight = width < 1280 ? 120 : 240; // for non-title inputs with current font size, update if changed
     const lastInput =
       notesElement.current ||
       directionsElement.current ||
@@ -219,7 +227,7 @@ export function RecipeForm({
     const lastInputRect = lastInput?.getBoundingClientRect();
     const isSubmitPresent =
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
-    let endOfPage =
+    const endOfPage =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
       lastInputRect.height < 104
         ? lastInputRect.top + 104
@@ -227,19 +235,140 @@ export function RecipeForm({
     const formHasNextPage =
       pages[thisPageNum + 1]?.type === 'recipeForm' &&
       pages[thisPageNum + 1]?.data[0]?.type !== 'title';
-    const nextPage = formHasNextPage
-      ? pages[thisPageNum + 1]
-      : { type: 'recipeForm', data: [] };
-    if (!formHasNextPage) pages.splice(thisPageNum, 0, nextPage);
-    while (endOfPage > availableHeight) {
-      let changedAnything = false;
+
+    type flowHandlingArguments = {
+      availableHeight: number;
+      endOfPage: number;
+      submitHeight: number;
+      lineHeight: number;
+      imageHeight: number;
+      isSubmitPresent: boolean;
+      thisPage: PageData;
+      nextPage: PageData;
+      lastInput: HTMLTextAreaElement;
+      lastInputRect: DOMRect;
+    };
+
+    function handleOverflow({
+      availableHeight,
+      endOfPage,
+      submitHeight,
+      lineHeight,
+      imageHeight,
+      isSubmitPresent,
+      thisPage,
+      nextPage,
+      lastInput,
+      lastInputRect,
+    }: flowHandlingArguments) {
+      const lastHoldsImage =
+        pageData.data[pageData.data.length - 1].type === 'img-and-ingredients';
+      const lastHasTitle = pageData.data[pageData.data.length - 1].first;
+      const functionalHeight = !lastHoldsImage
+        ? lastInputRect.height + (lastHasTitle ? lineHeight : 0)
+        : imageHeight >= lineHeight + lastInputRect.height
+        ? imageHeight
+        : lineHeight + lastInputRect.height;
       if (isSubmitPresent) {
-        const entrantToBeMoved = pageData.data.pop() as Entrant;
+        /*
+        The below type assertion is necessary because while pageData.data cannot
+        be empty at this point, typescript won't recognize that when popping
+        (I tried a guard clause).
+        */
+        const entrantToBeMoved = thisPage.data.pop() as Entrant;
         nextPage.data.unshift(entrantToBeMoved);
         endOfPage -= submitHeight;
-        changedAnything = true;
+      }
+      // The following conditional means if the entire entrant needs to be moved
+      else if (
+        (functionalHeight - (lastHasTitle ? lineHeight : 0) <
+          endOfPage - availableHeight + lineHeight &&
+          functionalHeight <= availableHeight) ||
+        (lastHoldsImage &&
+          lastInputRect.top + imageHeight - lineHeight > availableHeight)
+      ) {
+        const entrantToBeMoved = thisPage.data.pop() as Entrant;
+        if (
+          entrantToBeMoved.type === nextPage.data[0]?.type ||
+          (entrantToBeMoved.type === 'img-and-ingredients' &&
+            nextPage.data[0]?.type === 'ingredients')
+        ) {
+          entrantToBeMoved.text =
+            nextPage.data[0].text && nextPage.data[0].text[0] === '\n'
+              ? entrantToBeMoved.text + nextPage.data[0].text
+              : entrantToBeMoved.text + '\n' + nextPage.data[0].text;
+          nextPage.data.shift();
+        }
+        nextPage.data.unshift(entrantToBeMoved);
+        endOfPage -= functionalHeight;
+      }
+      // This else means if the entrant needs to be split up
+      else {
+        if (!simulationElement.current) return;
+        const simulationRect =
+          simulationElement.current.getBoundingClientRect();
+        simulationRect.width = lastInputRect.width;
+        const [text, leftover] = adjustInput(
+          width < 1280
+            ? lastInputRect.height - (endOfPage - availableHeight)
+            : (lastInputRect.height - (endOfPage - availableHeight)) / 2,
+          lastInput.value,
+          simulationElement.current
+        );
+        thisPage.data[thisPage.data.length - 1].text = text;
+        const entrantToBeMoved: Entrant = lastHoldsImage
+          ? { type: 'ingredients' }
+          : { type: thisPage.data[thisPage.data.length - 1].type };
+        entrantToBeMoved.text = leftover;
+        if (entrantToBeMoved.type === nextPage.data[0]?.type) {
+          nextPage.data[0].text = leftover + nextPage.data[0].text;
+        } else {
+          nextPage.data.unshift(entrantToBeMoved);
+        }
+        /*
+        If a split is necessary, it will always shorten sufficiently, so the
+        following line simply ends the adjusting, it's not an accurate endOfPage
+        */
+        endOfPage -= 10000;
+      }
+      if (endOfPage > availableHeight) {
+        handleOverflow({
+          availableHeight,
+          endOfPage,
+          submitHeight,
+          lineHeight,
+          imageHeight,
+          isSubmitPresent,
+          thisPage,
+          nextPage,
+          lastInput,
+          lastInputRect,
+        });
       }
     }
+
+    let changedAnything = false;
+    const thisPage = pageData;
+    if (endOfPage > availableHeight) {
+      changedAnything = true;
+      const nextPage = formHasNextPage
+        ? pages[thisPageNum + 1]
+        : { type: 'recipeForm', data: [] };
+      if (!formHasNextPage) pages.splice(thisPageNum + 1, 0, nextPage);
+      handleOverflow({
+        availableHeight,
+        endOfPage,
+        submitHeight,
+        lineHeight,
+        imageHeight,
+        isSubmitPresent,
+        thisPage,
+        nextPage,
+        lastInput,
+        lastInputRect,
+      });
+    }
+    if (changedAnything) setPages([...pages]);
     /*
     Determine end of page
       While content is too long
@@ -353,12 +482,7 @@ export function RecipeForm({
             setPages
 
     */
-    while (false) {
-      if (changedAnything) {
-        setPages([...pages]);
-      }
-    }
-  }, [pageData, pages, setPages, thisPageNum]);
+  }, [pageData, pages, setPages, thisPageNum, width]);
 
   useEffect(() => checkPageEnd(), [checkPageEnd]);
 
@@ -562,7 +686,8 @@ export function RecipeForm({
       })}
       <textarea
         rows={1}
-        className="absolute top-0 pointer-events-none px-[2px] resize-none overflow-hidden opacity-0"
+        className={`absolute top-0 pointer-events-none px-[2px] resize-none
+          overflow-hidden opacity-0`}
         style={{ fontSize: '14px' }}
         ref={simulationElement}></textarea>
     </div>
