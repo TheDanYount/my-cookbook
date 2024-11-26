@@ -57,7 +57,9 @@ export function ToCEntry({
           <div className="text-base my-[2px]" onClick={() => onDelete(id)}>
             <FaTrash />
           </div>
-          <p className="select-none" onClick={handleRecipeNavigation}>
+          <p
+            className="select-none break-words"
+            onClick={handleRecipeNavigation}>
             {text}
           </p>
         </div>

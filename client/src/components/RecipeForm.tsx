@@ -51,6 +51,14 @@ export function RecipeForm({
   }, [imgStore?.fileUrl]);
 
   useEffect(() => {
+    const newTitle = pageData.data.find((e) => e.type === 'title')?.text || '';
+    setTitle(newTitle);
+    if (titleElement.current) {
+      titleElement.current.value = newTitle;
+      titleElement.current.style.height = 'auto';
+      titleElement.current.style.height =
+        titleElement.current.scrollHeight + 'px';
+    }
     const newIngredients =
       pageData.data.find((e) => e.type === 'img-and-ingredients')?.text ||
       pageData.data.find((e) => e.type === 'ingredients')?.text ||
@@ -64,7 +72,6 @@ export function RecipeForm({
     }
     const newDirections =
       pageData.data.find((e) => e.type === 'directions')?.text || '';
-
     setDirections(newDirections);
     if (directionsElement.current) {
       directionsElement.current.value = newDirections;
@@ -116,8 +123,8 @@ export function RecipeForm({
     data.append('cookbookId', String(cookbookId));
     data.append('title', title);
     const ingredients = [
-      ...extractText(formPages, 'ingredients'),
       ...extractText(formPages, 'img-and-ingredients'),
+      ...extractText(formPages, 'ingredients'),
     ]; // An array
     data.append('ingredients', JSON.stringify(ingredients));
     const directions = extractText(formPages, 'directions'); // An array
@@ -150,7 +157,6 @@ export function RecipeForm({
         );
         const formattedResult = await result.json();
         if (!result.ok) throw new Error(formattedResult.error);
-        alert('Recipe updated successfully!');
         const newRecipePages = await getRecipeById(
           cookbookId,
           formattedResult.recipeId
@@ -161,8 +167,7 @@ export function RecipeForm({
           endOfForm + 1 - startOfForm,
           ...newRecipePages
         );
-        if (pageData.data[0].type === 'submit')
-          pages.splice(pages.length - 1, 1);
+        if (pageData.data[0].type === 'submit') pages.splice(endOfForm + 1, 1);
         setPages(pages);
         updateToc(pages, formattedResult);
         navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
@@ -183,7 +188,6 @@ export function RecipeForm({
         });
         const formattedResult = await result.json();
         if (!result.ok) throw new Error(formattedResult.error);
-        alert('Recipe added successfully!');
         const newRecipePages = await getRecipeById(
           cookbookId,
           formattedResult.recipeId
@@ -194,8 +198,7 @@ export function RecipeForm({
           endOfForm + 1 - startOfForm,
           ...newRecipePages
         );
-        if (pageData.data[0].type === 'submit')
-          pages.splice(pages.length - 1, 1);
+        if (pageData.data[0].type === 'submit') pages.splice(endOfForm + 1, 1);
         setPages(pages);
         addToToc(pages, formattedResult);
         navigate(`/cookbook/${cookbookId}/page/${endOfForm}`);
@@ -209,150 +212,330 @@ export function RecipeForm({
     const availableHeight = width < 1280 ? 398 : 736; // with current Cookbook Position, update if changed
     const submitHeight = width < 1280 ? 24 : 48; // with current submit element, update if changed
     const lineHeight = width < 1280 ? 16 : 32; // for non-title inputs with current font size, update if changed
+    const imageHeight = width < 1280 ? 120 : 240; // for non-title inputs with current font size, update if changed
     const lastInput =
       notesElement.current ||
       directionsElement.current ||
       ingredientsElement.current ||
       titleElement.current;
     if (!lastInput) return;
-    if (!simulationElement.current) return;
+    const simElement = simulationElement.current;
+    if (!simElement) return;
     const lastInputRect = lastInput?.getBoundingClientRect();
     const isSubmitPresent =
       pageData.data[pageData.data.length - 1].type === 'submit' ? true : false;
     const endOfPage =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
-      lastInputRect.height < 104
-        ? lastInputRect.top + 104
+      lastInputRect.height < 104 * (width < 1280 ? 1 : 2)
+        ? lastInputRect.top + 104 * (width < 1280 ? 1 : 2)
         : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
-    while (endOfPage > availableHeight) {
-      const changedAnything = false;
-      const formHasNextPage =
-        pages[thisPageNum + 1]?.type === 'recipeForm' &&
-        pages[thisPageNum + 1]?.data[0]?.type !== 'title';
+    const formHasNextPage =
+      pages[thisPageNum + 1]?.type === 'recipeForm' &&
+      pages[thisPageNum + 1]?.data[0]?.type !== 'title';
+
+    type flowHandlingArguments = {
+      availableHeight: number;
+      endOfPage: number;
+      submitHeight: number;
+      lineHeight: number;
+      imageHeight: number;
+      isSubmitPresent: boolean;
+      thisPage: PageData;
+      nextPage: PageData;
+      lastInput: HTMLTextAreaElement;
+      lastInputRect: DOMRect;
+      simElement: HTMLTextAreaElement;
+    };
+
+    function handleOverflow({
+      availableHeight,
+      endOfPage,
+      submitHeight,
+      lineHeight,
+      imageHeight,
+      isSubmitPresent,
+      thisPage,
+      nextPage,
+      lastInput,
+      lastInputRect,
+      simElement,
+    }: flowHandlingArguments) {
+      const lastHoldsImage =
+        thisPage.data[thisPage.data.length - 1].type === 'img-and-ingredients';
+      const lastHasTitle = thisPage.data[thisPage.data.length - 1].first;
+      const functionalHeight = !lastHoldsImage
+        ? lastInputRect.height + (lastHasTitle ? lineHeight : 0)
+        : imageHeight >= lineHeight + lastInputRect.height
+        ? imageHeight
+        : lineHeight + lastInputRect.height;
+      if (isSubmitPresent) {
+        /*
+        The below type assertion is necessary because while thisPage.data cannot
+        be empty at this point, typescript won't recognize that when popping
+        (I tried a guard clause).
+        */
+        const entrantToBeMoved = thisPage.data.pop() as Entrant;
+        nextPage.data.unshift(entrantToBeMoved);
+        endOfPage -= submitHeight;
+      }
+      // The following conditional means if the entire entrant needs to be moved
+      else if (
+        (functionalHeight - (lastHasTitle ? lineHeight : 0) <
+          endOfPage - availableHeight + lineHeight &&
+          functionalHeight <= availableHeight) ||
+        (lastHoldsImage &&
+          lastInputRect.top + imageHeight - lineHeight > availableHeight)
+      ) {
+        const entrantToBeMoved = thisPage.data.pop() as Entrant;
+        if (
+          entrantToBeMoved.type === nextPage.data[0]?.type ||
+          (entrantToBeMoved.type === 'img-and-ingredients' &&
+            nextPage.data[0]?.type === 'ingredients')
+        ) {
+          entrantToBeMoved.text =
+            String(entrantToBeMoved.text) + nextPage.data[0].text;
+          nextPage.data.shift();
+        }
+        nextPage.data.unshift(entrantToBeMoved);
+        endOfPage -= functionalHeight;
+      }
+      // This else means if the entrant needs to be split up
+      else {
+        simElement.style.width =
+          lastInputRect.width / (width < 1280 ? 1 : 2) + 'px';
+        if (
+          thisPage.data[thisPage.data.length - 1]?.type ===
+            'img-and-ingredients' ||
+          thisPage.data[thisPage.data.length - 1]?.type === 'ingredients'
+        ) {
+          simElement.style.padding = '0 0 0 2px';
+        } else {
+          simElement.style.padding = '0 2px';
+        }
+        const [text, leftover] = adjustInput(
+          width < 1280
+            ? lastInputRect.height - (endOfPage - availableHeight)
+            : (lastInputRect.height - (endOfPage - availableHeight)) / 2,
+          lastInput.value,
+          simElement,
+          true
+        );
+        thisPage.data[thisPage.data.length - 1].text = text;
+        const entrantToBeMoved: Entrant = lastHoldsImage
+          ? { type: 'ingredients' }
+          : { type: thisPage.data[thisPage.data.length - 1].type };
+        entrantToBeMoved.text = leftover;
+        if (entrantToBeMoved.type === nextPage.data[0]?.type) {
+          nextPage.data[0].text = leftover + nextPage.data[0].text;
+        } else {
+          nextPage.data.unshift(entrantToBeMoved);
+        }
+        /*
+        If a split is necessary, it will always shorten sufficiently, so the
+        following line simply ends the adjusting, it's not an accurate endOfPage
+        */
+        endOfPage -= 10000;
+      }
+      if (endOfPage > availableHeight) {
+        handleOverflow({
+          availableHeight,
+          endOfPage,
+          submitHeight,
+          lineHeight,
+          imageHeight,
+          isSubmitPresent,
+          thisPage,
+          nextPage,
+          lastInput,
+          lastInputRect,
+          simElement,
+        });
+      }
+    }
+
+    function handleUnderflow({
+      availableHeight,
+      endOfPage,
+      submitHeight,
+      lineHeight,
+      imageHeight,
+      isSubmitPresent,
+      thisPage,
+      nextPage,
+      lastInput,
+      lastInputRect,
+      simElement,
+    }: flowHandlingArguments): boolean {
+      if (!nextPage.data[0]) return false;
+      const firstHoldsImage = nextPage.data[0].type === 'img-and-ingredients';
+      const firstHasTitle = nextPage.data[0].first;
+      if (
+        nextPage.data[0].type === 'submit' &&
+        availableHeight - endOfPage >= submitHeight
+      ) {
+        const entrantToBeMoved = nextPage.data.shift() as Entrant;
+        thisPage.data.push(entrantToBeMoved);
+        endOfPage += submitHeight;
+        handleUnderflow({
+          availableHeight,
+          endOfPage,
+          submitHeight,
+          lineHeight,
+          imageHeight,
+          isSubmitPresent,
+          thisPage,
+          nextPage,
+          lastInput,
+          lastInputRect,
+          simElement,
+        });
+        return true;
+      }
+      // The following conditional is for moving img-and-ingredients
+      else if (firstHoldsImage && availableHeight - endOfPage >= imageHeight) {
+        simElement.style.width = '141px';
+        simElement.style.padding = '0 0 0 2px';
+        const simRect = simElement.getBoundingClientRect();
+        simRect.width = 141;
+        const [text, leftover] = adjustInput(
+          width < 1280
+            ? availableHeight - lastInputRect.bottom
+            : (availableHeight - lastInputRect.bottom) / 2,
+          nextPage.data[0].text ? nextPage.data[0].text : '',
+          simElement,
+          false
+        );
+        const entrantToBeMoved = nextPage.data.shift() as Entrant;
+        entrantToBeMoved.text = text;
+        if (leftover) {
+          nextPage.data.unshift({ type: 'ingredients', text: leftover });
+        }
+        thisPage.data.push(entrantToBeMoved);
+        endOfPage +=
+          simRect.height > imageHeight
+            ? simRect.height - (simElement.value[0] === '\n' ? lineHeight : 0)
+            : imageHeight;
+        handleUnderflow({
+          availableHeight,
+          endOfPage,
+          submitHeight,
+          lineHeight,
+          imageHeight,
+          isSubmitPresent,
+          thisPage,
+          nextPage,
+          lastInput,
+          lastInputRect,
+          simElement,
+        });
+        return true;
+      }
+      // The following conditional is for all other moves
+      else if (
+        availableHeight - endOfPage >=
+          lineHeight + (firstHasTitle ? lineHeight : 0) &&
+        !(nextPage.data[0].type === 'img-and-ingredients') &&
+        !(nextPage.data[0].type === 'submit')
+      ) {
+        const nextIsIngredients = nextPage.data[0].type === 'ingredients';
+        simElement.style.width = (nextIsIngredients ? 141 : 261) + 'px';
+        if (nextIsIngredients) {
+          simElement.style.padding = '0 0 0 2px';
+        } else {
+          simElement.style.padding = '0 2px';
+        }
+        const [text, leftover] = adjustInput(
+          width < 1280
+            ? availableHeight - lastInputRect.bottom
+            : (availableHeight - lastInputRect.bottom) / 2,
+          nextPage.data[0].text ? nextPage.data[0].text : '',
+          simElement,
+          false
+        );
+        console.log(simElement.getBoundingClientRect().height);
+        console.log(simElement.value);
+        const entrantToBeMoved = nextPage.data.shift() as Entrant;
+        entrantToBeMoved.text = text;
+        if (leftover) {
+          nextPage.data.unshift({
+            type: entrantToBeMoved.type,
+            text: leftover,
+          });
+        }
+        if (
+          entrantToBeMoved.type ===
+            thisPage.data[thisPage.data.length - 1].type ||
+          (entrantToBeMoved.type === 'ingredients' &&
+            thisPage.data[thisPage.data.length - 1].type ===
+              'img-and-ingredients')
+        ) {
+          thisPage.data[thisPage.data.length - 1].text += entrantToBeMoved.text;
+        } else {
+          thisPage.data.push(entrantToBeMoved);
+        }
+        endOfPage +=
+          simElement.getBoundingClientRect().height -
+          (simElement.value[0] === '\n' ? lineHeight : 0);
+        handleUnderflow({
+          availableHeight,
+          endOfPage,
+          submitHeight,
+          lineHeight,
+          imageHeight,
+          isSubmitPresent,
+          thisPage,
+          nextPage,
+          lastInput,
+          lastInputRect,
+          simElement,
+        });
+        return true;
+      } else {
+        return false;
+      }
+    }
+    let changedAnything = false;
+    const thisPage = pageData;
+    if (endOfPage > availableHeight) {
+      changedAnything = true;
       const nextPage = formHasNextPage
         ? pages[thisPageNum + 1]
         : { type: 'recipeForm', data: [] };
-      if (!formHasNextPage) pages.splice(thisPageNum, 0, nextPage);
+      if (!formHasNextPage) pages.splice(thisPageNum + 1, 0, nextPage);
+      handleOverflow({
+        availableHeight,
+        endOfPage,
+        submitHeight,
+        lineHeight,
+        imageHeight,
+        isSubmitPresent,
+        thisPage,
+        nextPage,
+        lastInput,
+        lastInputRect,
+        simElement,
+      });
+    } else {
+      if (!formHasNextPage) return;
+      const nextPage = pages[thisPageNum + 1];
+      changedAnything = handleUnderflow({
+        availableHeight,
+        endOfPage,
+        submitHeight,
+        lineHeight,
+        imageHeight,
+        isSubmitPresent,
+        thisPage,
+        nextPage,
+        lastInput,
+        lastInputRect,
+        simElement,
+      });
     }
-    /*
-    Determine end of page
-      While content is too long
-        let changedAnything = false
-        If nextPage is of this form
-          set it as nextPage
-        Else
-          Create new page and splice it in pages
-          set it as nextPage
-        If submit is present
-          Pop submit as entrantToBeMoved
-          Unshift EntrantToBeMoved
-          Update remainingExcess
-          ChangedAnything = true
-        Else if last element should be moved entirely
-          Pop
-          Unshift
-          Update remainingExcess
-            If not first: with height
-            Else if 'img-and-ingredients and height < 104: with (width < 1280 ? 120 : 240)
-            Else: with height + lineHeight (for subtitle)
-          ChangedAnything = true
-        Else, meaning split
-          Update simulationElement's width to lastInput's width
-          use adjustInput with heightGoal of height - remainingExcess, original text, & simulationElement, it returns text & unformattedLeftover
-          If UL starts with a '\n' and has length > 1, trim it w/ splice(1);
-          Update remainingExcess with
-            If img-and-ingredients and height < (width < 1280 ? 104 : 208): height - (width < 1280 ? 120 : 240)
-            Else: height - simulationElement.current.getBoundingRect().height
-          Set lastInput's text to text
-          Set entrantToBeMoved to contain leftover unless types match, in which case set first element on next page to have text of leftover + '\n' + current
-          ChangedAnything = true
-        If changedAnything
-            setPages
-      While content is too short
-        Check for next page
-          If not, break
-        Check for if emptySpace >= lineHeight + 1
-          If not, break
-        let changedAnything = false
-        If submit is next
-          If emptySpace > submitHeight
-            Pop
-            Unshift
-            Update emptySpace
-            ChangedAnything = true
-          Else
-            Break
-        Else if types match and emptySpace
-          Update simulationElement's width to lastInput's width
-          use adjustInput with heightGoal of height + emptySpace, the concatenated texts, & simulationElement, it returns text & unformattedLeftover
-          Update emptySpace with simulationElement.current.getBoundingRect().height - height
-          If UL is blank
-            shift
-          Else
-            If UL starts w/ '\n' and has length > 1
-              Trim
-            Next page's first element's text is set to UL
-          Set lastInput's text to text
-          ChangedAnything = true
-        Else if next is 'img-and-ingredients'
-          If emptySpace >= (width < 1280 ? 120 : 240)
-          Update simulationElement's width to lastInput's width
-          use adjustInput with heightGoal of height + emptySpace, next's text, & simulationElement, it returns text & unformattedLeftover
-          Update emptySpace with
-            If simulationElement's height > (width < 1280 ? 120 : 240)
-              simulationElement's height
-            Else
-              (width < 1280 ? 120 : 240)
-          Push a copy of 'img-and-ingredients with text as text
-          Shift
-            If Ul !== ''
-              If UL starts w/ '\n' and has length > 1
-                Trim
-              Create new 'ingredients' with UL as text
-              Unshift new 'ingredients'
-          Else
-            Break
-        Else if next is 'ingredients'
-          Update simulationElement's width to lastInput's width
-          use adjustInput with heightGoal of height <= (width < 1280 ? 120 : 240) ? (width < 1280 ? 120 : 240) + emptySpace : height + emptySpace, the concatenated texts, & simulationElement, it returns text & unformattedLeftover
-          Update emptySpace with
-            If simulationElement's height < (width < 1280 ? 120 : 240): 0
-            If height <= (width < 1280 ? 120 : 240)
-              simulationElement's height - (width < 1280 ? 120 : 240)
-            Else
-              simulationElement's height - height
-          Set lastInput's text to text
-          If Ul !== ''
-            If UL starts w/ '\n' and has length > 1
-              Trim
-            Next's text = UL
-          Else
-            Shift
-          ChangedAnything = true
-        Else if types do not match and emptySpace >= 2*lineHeight + 1
-          Update simulationElement's width to lastInput's width
-          use adjustInput with heightGoal of height + emptySpace, next's text, & simulationElement, it returns text & unformattedLeftover
-          Update emptySpace with simulationElement's height + lineHeight
-          Push entrantToBeMoved with text as text and first
-          If UL starts with '\n' and has length > 1
-            trim
-          If l !== ''
-            Next's text = L
-          Else
-            Shift
-          ChangedAnything = true
-          Else
-            Break
-        If changedAnything
-            setPages
-
-    */
-    while (false) {
-      if (changedAnything) {
-        setPages([...pages]);
-      }
+    if (changedAnything) {
+      setPages([...pages]);
     }
-  }, [pageData, pages, setPages, thisPageNum]);
+  }, [pageData, pages, setPages, thisPageNum, width]);
 
   useEffect(() => checkPageEnd(), [checkPageEnd]);
 
@@ -556,7 +739,8 @@ export function RecipeForm({
       })}
       <textarea
         rows={1}
-        className="absolute top-0 pointer-events-none px-[2px] resize-none overflow-hidden opacity-0"
+        className={`absolute top-0 pointer-events-none px-[2px] resize-none
+          overflow-hidden opacity-0`}
         style={{ fontSize: '14px' }}
         ref={simulationElement}></textarea>
     </div>
@@ -592,9 +776,10 @@ function extractText(formPages: PageData[], keyWord: string) {
 function adjustInput(
   heightGoal: number,
   text: string,
-  element: HTMLTextAreaElement
+  element: HTMLTextAreaElement,
+  overflow: boolean
 ): string[] {
-  if (text === '') return ['\n', ''];
+  if (text === '') return ['', ''];
   const recursiveTextSplitter = (
     str,
     leftover,
@@ -604,7 +789,11 @@ function adjustInput(
     element.value = str;
     element.style.height = 'auto';
     element.style.height = element.scrollHeight + 'px';
-    if (element.scrollHeight > heightGoal) {
+    const functionalHeight =
+      str[0] === '\n' && !overflow
+        ? element.scrollHeight - 16
+        : element.scrollHeight;
+    if (functionalHeight > heightGoal) {
       if (lengthOfSplit === 1) {
         if (finalComparison) {
           return undefined;

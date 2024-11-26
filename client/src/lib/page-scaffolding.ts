@@ -32,7 +32,9 @@ function buildRecipeData(formattedResult) {
           type: 'img-and-ingredients',
           text: '',
           fileUrl: recipe.imageUrl,
+          first: firstIngredients,
         });
+        firstIngredients = false;
       } else if (ingredients[i] && !usedImage) {
         usedImage = true;
         newData.push({
@@ -260,11 +262,8 @@ export function convertRecipeToForm(
       data: dataToAdd,
     };
   });
-  setPages([
-    ...pages.slice(0, pageNum),
-    ...newPages,
-    ...pages.slice(pageNum + length),
-  ]);
+  pages.splice(pageNum, newPages.length, ...newPages);
+  setPages(pages);
 }
 
 export async function deleteRecipe(cookbookId, recipeId) {
