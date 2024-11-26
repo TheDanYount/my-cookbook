@@ -28,8 +28,6 @@ export function CookbookForm() {
       });
       const formattedResult = await result.json();
       if (!result.ok) throw new Error(formattedResult.error);
-      console.log(formattedResult.cookbookId);
-      alert('Cookbook added successfully!');
       navigate(`/cookbook/${formattedResult.cookbookId}/page/1`);
     } catch (err) {
       alert(err);

@@ -224,8 +224,6 @@ export function handleUnderflow({
       simElement,
       false
     );
-    console.log(simElement.getBoundingClientRect().height);
-    console.log(simElement.value);
     const entrantToBeMoved = nextPage.data.shift() as Entrant;
     entrantToBeMoved.text = text;
     if (leftover) {
