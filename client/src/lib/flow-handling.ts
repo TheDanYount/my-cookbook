@@ -136,6 +136,11 @@ export function handleUnderflow({
   simElement,
   width,
 }: flowHandlingArguments): boolean {
+  if (
+    thisPage.data[thisPage.data.length - 1].type === 'img-and-ingredients' &&
+    lastInputRect.height + lineHeight > imageHeight
+  )
+    endOfPage = lastInputRect.top + lastInputRect.height;
   if (!nextPage.data[0]) return false;
   const firstHoldsImage = nextPage.data[0].type === 'img-and-ingredients';
   const firstHasTitle = nextPage.data[0].first;

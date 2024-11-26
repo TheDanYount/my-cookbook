@@ -228,7 +228,7 @@ export function RecipeForm({
     const endOfPage =
       pageData.data[pageData.data.length - 1].type === 'img-and-ingredients' &&
       lastInputRect.height < 104 * (width < 1280 ? 1 : 2)
-        ? lastInputRect.top + 104 * (width < 1280 ? 1 : 2)
+        ? imageHeight
         : lastInputRect.bottom + (isSubmitPresent ? submitHeight : 0);
     const formHasNextPage =
       pages[thisPageNum + 1]?.type === 'recipeForm' &&
