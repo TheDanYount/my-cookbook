@@ -51,10 +51,12 @@ export function ToCEntry({
           <div className="text-[20px]" onPointerDown={onPointerDown}>
             <RxCaretSort />
           </div>
-          <div className="text-base my-[2px] " onClick={handleEdit}>
+          <div className="text-base my-[2px] mr-[4px]" onClick={handleEdit}>
             <FaPencilAlt />
           </div>
-          <div className="text-base my-[2px]" onClick={() => onDelete(id)}>
+          <div
+            className="text-base my-[2px] mr-[4px]"
+            onClick={() => onDelete(id)}>
             <FaTrash />
           </div>
           <p
