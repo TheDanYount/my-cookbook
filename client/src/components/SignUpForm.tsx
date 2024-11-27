@@ -84,7 +84,12 @@ export function SignUpForm() {
         Sign up
       </h2>
       {isLoading ? (
-        <p className="text-center">Loading...</p>
+        <div className="h-[80px] flex justify-center items-center">
+          <img
+            src="/rimmed-loader.png"
+            alt="loading spinner"
+            className="h-[40px] animate-spin"></img>
+        </div>
       ) : (
         <>
           {page === 0 && (

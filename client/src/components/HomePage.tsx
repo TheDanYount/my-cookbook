@@ -65,7 +65,12 @@ export function HomePage() {
         Cookbooks
       </h2>
       {isLoading ? (
-        <p>Loading...</p>
+        <div className="h-[262px] flex justify-center items-center">
+          <img
+            src="/rimmed-loader.png"
+            alt="loading spinner"
+            className="h-[40px] animate-spin"></img>
+        </div>
       ) : (
         <div className="flex justify-center items-center mt-[20px] w-full">
           {cookbooks.length >= visibleCookbooks && (
