@@ -108,8 +108,10 @@ export function Cookbook() {
   return (
     <div
       className={`font-["Patrick_Hand"] text-[14px] ${
-        smallScreenShift && pageNum && +pageNum - leftPage === 1
-          ? 'ml-[-234px]'
+        smallScreenShift && pageNum
+          ? +pageNum - leftPage === 1
+            ? 'ml-[-234px]'
+            : 'ml-[37px]'
           : 'mx-auto'
       }
           flex w-[588px]
